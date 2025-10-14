@@ -1,7 +1,5 @@
 #include "ui_widget.h"
 
-#include <raylib.h>
-
 static GBL_RESULT UI_Widget_init_(GblInstance *pInstance) {
     UI_WIDGET(pInstance)->r = 0;
     UI_WIDGET(pInstance)->g = 255;
@@ -22,12 +20,12 @@ static GBL_RESULT UI_Widget_init_(GblInstance *pInstance) {
 
     UI_WIDGET(pInstance)->is_relative = true;
 
+    GblStringBuffer_construct(&UI_WIDGET(pInstance)->label);
     return GBL_RESULT_SUCCESS;
 }
 
 static GBL_RESULT UI_Widget_GblObject_setProperty_(GblObject *pObject, const GblProperty *pProp, GblVariant *pValue) {
     UI_Widget *pSelf = UI_WIDGET(pObject);
-
     switch (pProp->id) {
         case UI_Widget_Property_Id_x:
             GblVariant_valueCopy(pValue, &pSelf->x);
@@ -83,6 +81,12 @@ static GBL_RESULT UI_Widget_GblObject_setProperty_(GblObject *pObject, const Gbl
             break;
         case UI_Widget_Property_Id_border_a:
             GblVariant_valueCopy(pValue, &pSelf->border_a);
+            break;
+        case UI_Widget_Property_Id_label:
+            GblStringBuffer_set(&pSelf->label, GblVariant_toString(pValue));
+            break;
+        case UI_Widget_Property_Id_border_width:
+            GblVariant_valueCopy(pValue, &pSelf->border_width);
             break;
         default:
             return GBL_RESULT_ERROR_INVALID_PROPERTY;
@@ -140,6 +144,9 @@ static GBL_RESULT UI_Widget_GblObject_property_(const GblObject *pObject, const 
         case UI_Widget_Property_Id_border_a:
             GblVariant_setUint8(pValue, pSelf->border_a);
             break;
+        case UI_Widget_Property_Id_label:
+            GblVariant_setString(pValue, GblStringBuffer_cString(&pSelf->label));
+            break;
         default:
             return GBL_RESULT_ERROR_INVALID_PROPERTY;
     }
@@ -147,25 +154,48 @@ static GBL_RESULT UI_Widget_GblObject_property_(const GblObject *pObject, const 
     return GBL_RESULT_SUCCESS;
 }
 
-static void UI_Widget_draw_(UI_Widget *pSelf) {
+Vector2 UI_get_absolute_position(UI_Widget *pWidget) {
+    GblObject *parent = GblObject_parent(GBL_OBJECT(pWidget));
+    Vector2    pos    = { pWidget->x, pWidget->y };
+
+    if (!parent || !pWidget->is_relative) {
+        return pos;
+    }
+
+    Vector2 parent_pos = UI_get_absolute_position(UI_WIDGET(parent));
+    pos.x += parent_pos.x;
+    pos.y += parent_pos.y;
+    return pos;
+}
+
+static GBL_RESULT UI_Widget_draw_(UI_Widget *pSelf) {
     Rectangle  rec    = (Rectangle){ pSelf->x, pSelf->y, pSelf->w, pSelf->h };
     GblObject *parent = GblObject_parent(GBL_OBJECT(pSelf));
 
     if (parent && pSelf->is_relative) {
-        rec.x += UI_WIDGET(parent)->x;
-        rec.y += UI_WIDGET(parent)->y;
+        Vector2 parent_pos = UI_get_absolute_position(UI_WIDGET(parent));
+        rec.x += parent_pos.x;
+        rec.y += parent_pos.y;
     }
 
     if (pSelf->a) {
         DrawRectangleRec(rec, (Color){ pSelf->r, pSelf->g, pSelf->b, pSelf->a });
     }
+
     if (pSelf->border_a) {
         DrawRectangleLinesEx(rec, pSelf->border_width, (Color){ pSelf->border_r, pSelf->border_g, pSelf->border_b, pSelf->border_a });
+    }
+
+    if (GblStringBuffer_length(&pSelf->label)) {
+        int font_size  = 20;
+        int text_width = MeasureText(GblStringBuffer_cString(&pSelf->label), font_size);
+        DrawText(GblStringBuffer_cString(&pSelf->label), rec.x + (rec.width / 2) - (text_width / 2), rec.y + (rec.height / 2) - (font_size / 2), font_size, (Color){ 255, 255, 255, 255 });
     }
 }
 
 static GBL_RESULT UI_WidgetClass_init_(GblClass *pClass, const void *pData) {
     GBL_UNUSED(pData);
+
     // Check if this is the first instance of the class
     if (!GblType_classRefCount(GBL_CLASS_TYPEOF(pClass))) GBL_PROPERTIES_REGISTER(UI_Widget);
 
@@ -207,22 +237,18 @@ GblType UI_Widget_type(void) {
     return type;
 }
 
-void UI_make_child(UI_Widget *pParent, UI_Widget *pChild) {
+void UI_make_child_(UI_Widget *pParent, UI_Widget *pChild) {
     GblObject_setParent(GBL_OBJECT(pChild), GBL_OBJECT(pParent));
 }
 
-GBL_RESULT UI_draw(UI_Widget *pSelf) {
-    if (!GblType_check(GBL_TYPEOF(pSelf), UI_WIDGET_TYPE)) {
-        return GBL_INVALID_TYPE;
-    }
-
+GBL_RESULT UI_draw_(UI_Widget *pSelf) {
     UI_WIDGET_GET_CLASS(pSelf)->pFnDraw(pSelf);
 
     size_t child_count = GblObject_childCount(GBL_OBJECT(pSelf));
 
     for (size_t i = 0; i < child_count; ++i) {
         GblObject *child_obj = GblObject_findChildByIndex(GBL_OBJECT(pSelf), i);
-        UI_draw(UI_WIDGET(child_obj));
+        UI_draw_(UI_WIDGET(child_obj));
     }
 
     return GBL_RESULT_SUCCESS;
