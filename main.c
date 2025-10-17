@@ -1,41 +1,63 @@
-#include "src/ui_widget.h"
-#include "src/ui_button.h"
+#include "src/ui.h"
 
 int main(int argc, char *argv[]) {
-    auto widget   = UI_Widget_create("color", 0x222222FF, "label", "I'm a widget!");
-    auto widget_2 = GBL_NEW(UI_Widget, "x", 10.0f, "y", 10.0f, "color", 0xBA1C3CAA, "border_a", 255);
-    auto widget_3 = GBL_OBJECT_NEW_N(UI_Widget, "x", 30.0f, "y", 50.0f, "w", 20.0f, "h", 200.0f, "border_a", 255, "r", 200);
+	auto container = UI_Container_create("color", 0x444444FF, "orientation", 'v');
 
-    auto button = GBL_OBJECT_NEW_N(UI_Button, "x", 30.0f, "y", 120.0f, "w", 90.0f, "h", 90.0f, "label", "Button!");
-    UI_make_child(widget, widget_2);
-    UI_make_child(widget_2, button);
+	auto button    = UI_Button_create("label", "1", "color", 0x8888FFFF, "border_color", 0xFFFFFFFF);
+	UI_make_child(container, button);
 
-    // init raylib
-    InitWindow(640, 480, "UI Widget Example");
-    SetTargetFPS(60);
+	// init raylib
+	InitWindow(640, 480, "UI Widget Example");
+	SetTargetFPS(60);
+	GBL_CONNECT(button, "on_press", test);
 
-    // draw it
-    while (!WindowShouldClose()) {
-        BeginDrawing();
-        ClearBackground(RAYWHITE);
+	// main loop
+	while (!WindowShouldClose()) {
 
-        UI_draw(widget); // we only need to call draw on the parent
-        UI_draw(widget_3);
+		BeginDrawing();
+		ClearBackground(RAYWHITE);
 
-        // move widget around, bouncing with walls. all children will follow
-        for (static float dx = 2.0f, dy = 2.0f;;) {
-            widget->x += dx;
-            widget->y += dy;
-            if (widget->x < 0 || widget->x + widget->w > 640) dx = -dx;
-            if (widget->y < 0 || widget->y + widget->h > 480) dy = -dy;
-            break;
-        }
+		// shrink, enlarge, and move around the container
+		if (IsKeyDown(KEY_RIGHT)) UI_WIDGET(container)->w += 2;
+		if (IsKeyDown(KEY_LEFT))  UI_WIDGET(container)->w -= 2;
+		if (IsKeyDown(KEY_UP))    UI_WIDGET(container)->h -= 2;
+		if (IsKeyDown(KEY_DOWN))  UI_WIDGET(container)->h += 2;
+		if (IsKeyDown(KEY_W))     UI_WIDGET(container)->y -= 2;
+		if (IsKeyDown(KEY_S))     UI_WIDGET(container)->y += 2;
+		if (IsKeyDown(KEY_A))     UI_WIDGET(container)->x -= 2;
+		if (IsKeyDown(KEY_D))     UI_WIDGET(container)->x += 2;
 
-        EndDrawing();
-    }
+		// if spacebar is pressed add new button to container
+		if (IsKeyPressed(KEY_SPACE)) {
+			size_t count = GblObject_childCount(GBL_OBJECT(container));
+			char buf[16];
+			snprintf(buf, sizeof(buf), "%d", count + 1);
+			auto new_button = UI_Button_create("label", buf, "color", 0x8888FFFF, "border_color", 0xFFFFFFFF);
+			UI_make_child(container, new_button);
+		}
 
-    UI_unref(widget); // only need to call unref on the parent
-    UI_unref(widget_3);
-    CloseWindow();
-    return 0;
+		// if backspace is pressed, remove the last button from the container
+		if (IsKeyPressed(KEY_BACKSPACE)) {
+			size_t count = GblObject_childCount(GBL_OBJECT(container));
+			if (count > 0) {
+				auto last = GblObject_findChildByIndex(GBL_OBJECT(container), count - 1);
+				GblObject_removeChild(GBL_OBJECT(container), GBL_OBJECT(last));
+				UI_unref(last); // unref the removed child
+			}
+		}
+
+		// if F pressed, toggle orientation
+		if (IsKeyPressed(KEY_F)) {
+			UI_CONTAINER(container)->orientation = UI_CONTAINER(container)->orientation == 'h' ? 'v' : 'h';
+		}
+
+		UI_update(container);
+		UI_draw(container);
+
+		EndDrawing();
+	}
+
+	UI_unref(container); // only need to call unref on the parent
+	CloseWindow();
+	return 0;
 }
