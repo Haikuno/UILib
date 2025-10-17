@@ -73,22 +73,19 @@ GBL_PROPERTIES(UI_Widget,
 
 GblType UI_Widget_type(void);
 
-UI_Widget* UI_Widget_ref(UI_Widget* pSelf);
+UI_Widget* UI_Widget_ref(GBL_SELF);
 
-
-GBL_DECLS_END
-
-#undef GBL_SELF_TYPE
-
-#define UI_Widget_create(...)			GBL_NEW(UI_Widget __VA_OPT__(,) __VA_ARGS__)
+// Takes a list of Name/Value pairs
+#define UI_Widget_create(/* property_name, property_value */...)			GBL_NEW(UI_Widget __VA_OPT__(,) __VA_ARGS__)
 
 // general UI functions (maybe these should be elsewhere)
+GBL_RESULT	UI_update_(GBL_SELF);
+GBL_RESULT	UI_draw_(GBL_SELF);
+void		UI_add_child_(GBL_SELF, UI_Widget *pChild);
+void		UI_unref_(GBL_SELF);
+Vector2		UI_get_absolute_position_(GBL_SELF);
 
-GBL_RESULT	UI_update_(UI_Widget *pSelf);
-GBL_RESULT	UI_draw_(UI_Widget *pSelf);
-void		UI_make_child_(UI_Widget* pParent, UI_Widget* pChild);
-void		UI_unref_(UI_Widget* pSelf);
-Vector2		UI_get_absolute_position(UI_Widget* pWidget);
-
+GBL_DECLS_END
+#undef GBL_SELF_TYPE
 
 #endif // UI_WIDGET_H

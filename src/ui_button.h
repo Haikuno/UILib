@@ -31,12 +31,12 @@ GBL_SIGNALS(UI_Button,
 
 GblType UI_Button_type(void);
 
-UI_Button* UI_Button_ref(UI_Button* pSelf);
+UI_Button* UI_Button_ref(GBL_SELF);
+
+// Takes a list of Name/Value pairs
+#define UI_Button_create(/* property_name, property_value */ ...) GBL_NEW(UI_Button __VA_OPT__(,) __VA_ARGS__)
 
 GBL_DECLS_END
-
 #undef GBL_SELF_TYPE
-
-#define UI_Button_create(...) GBL_NEW(UI_Button __VA_OPT__(,) __VA_ARGS__)
 
 #endif // UI_BUTTON_H

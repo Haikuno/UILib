@@ -8,7 +8,7 @@ int main(int argc, char *argv[]) {
 
 	auto container = UI_Container_create("color", 0x444444FF, "orientation", 'v', "padding", 15.0f, "margin", 10.0f);
 	auto button    = UI_Button_create("label", "Example text", "color", 0x8888FFFF, "border_color", 0xFFFFFFFF, "font", &nimbus);
-	UI_make_child(container, button);
+	UI_add_child(container, button);
 
 	// main loop
 	while (!WindowShouldClose()) {
@@ -35,7 +35,7 @@ int main(int argc, char *argv[]) {
 			char buf[16];
 			snprintf(buf, sizeof(buf), "%d", count + 1);
 			auto new_button = UI_Button_create("label", "Example text", "color", 0x8888FFFF, "border_color", 0xFFFFFFFF, "font", &nimbus);
-			UI_make_child(container, new_button);
+			UI_add_child(container, new_button);
 		}
 
 		// if backspace is pressed, remove the last button from the container

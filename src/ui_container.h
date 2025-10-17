@@ -8,7 +8,7 @@
 #define UI_CONTAINER_CLASS(klass)		(GBL_CLASS_CAST(UI_Container, klass))
 #define UI_CONTAINER_GET_CLASS(self)	(GBL_CLASSOF(UI_Container, self))
 
-#define GBL_SELF_TYPE UI_CONTAINER
+#define GBL_SELF_TYPE UI_Container
 
 GBL_FORWARD_DECLARE_STRUCT(UI_Container);
 GBL_DECLS_BEGIN
@@ -35,12 +35,12 @@ GBL_PROPERTIES(UI_Container,
 
 GblType UI_Container_type(void);
 
-UI_Container* UI_Container_ref(UI_Container* pSelf);
+UI_Container *UI_Container_ref(GBL_SELF);
+
+// Takes a list of Name/Value pairs
+#define UI_Container_create(/* property_name, property_value */ ...) GBL_NEW(UI_Container __VA_OPT__(,) __VA_ARGS__)
 
 GBL_DECLS_END
-
 #undef GBL_SELF_TYPE
-
-#define UI_Container_create(...) GBL_NEW(UI_Container __VA_OPT__(,) __VA_ARGS__)
 
 #endif // UI_CONTAINER_H

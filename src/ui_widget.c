@@ -248,7 +248,7 @@ static GBL_RESULT UI_Widget_GblObject_property_(const GblObject *pObject, const 
 	return GBL_RESULT_SUCCESS;
 }
 
-Vector2 UI_get_absolute_position(UI_Widget *pWidget) {
+Vector2 UI_get_absolute_position_(UI_Widget *pWidget) {
 	GblObject	*parent	= GblObject_parent(GBL_OBJECT(pWidget));
 	Vector2		pos		= { pWidget->x, pWidget->y };
 
@@ -256,7 +256,7 @@ Vector2 UI_get_absolute_position(UI_Widget *pWidget) {
 		return pos;
 	}
 
-	Vector2 parent_pos = UI_get_absolute_position(UI_WIDGET(parent));
+	Vector2 parent_pos = UI_get_absolute_position_(UI_WIDGET(parent));
 
 	pos.x += parent_pos.x;
 	pos.y += parent_pos.y;
@@ -273,7 +273,7 @@ static GBL_RESULT UI_Widget_draw_(UI_Widget *pSelf) {
 	GblObject *parent = GblObject_parent(GBL_OBJECT(pSelf));
 
 	if (parent && GBL_TYPEOF(parent) != UI_CONTAINER_TYPE && pSelf->is_relative) {
-		Vector2 parent_pos	= UI_get_absolute_position(UI_WIDGET(parent));
+		Vector2 parent_pos	= UI_get_absolute_position_(UI_WIDGET(parent));
 		rec.x				+= parent_pos.x;
 		rec.y				+= parent_pos.y;
 	}
@@ -368,7 +368,7 @@ GblType UI_Widget_type(void) {
 	return type;
 }
 
-void UI_make_child_(UI_Widget *pParent, UI_Widget *pChild) {
+void UI_add_child_(UI_Widget *pParent, UI_Widget *pChild) {
 	GblObject_setParent(GBL_OBJECT(pChild), GBL_OBJECT(pParent));
 }
 
