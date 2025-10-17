@@ -47,7 +47,7 @@ static GBL_RESULT UI_Container_update_(UI_Widget *pSelf) {
 }
 
 static GBL_RESULT UI_Container_draw_(UI_Widget *pSelf) {
-    GBL_CTX_BEGIN(NULL);
+    GBL_CTX_BEGIN(nullptr);
     GBL_VCALL_DEFAULT(UI_Widget, pFnDraw, pSelf);
     GBL_CTX_END();
 }
@@ -111,8 +111,8 @@ static GBL_RESULT UI_ContainerClass_init_(GblClass *pClass, const void *pData) {
     GBL_OBJECT_CLASS(pClass)->pFnSetProperty = UI_Container_GblObject_setProperty_;
     GBL_OBJECT_CLASS(pClass)->pFnProperty    = UI_Container_GblObject_property_;
 
-    UI_WIDGET_CLASS(pClass)->pFnActivate   = NULL;
-    UI_WIDGET_CLASS(pClass)->pFnDeactivate = NULL;
+    UI_WIDGET_CLASS(pClass)->pFnActivate   = nullptr;
+    UI_WIDGET_CLASS(pClass)->pFnDeactivate = nullptr;
     UI_WIDGET_CLASS(pClass)->pFnUpdate     = UI_Container_update_;
     UI_WIDGET_CLASS(pClass)->pFnDraw       = UI_Container_draw_;
 

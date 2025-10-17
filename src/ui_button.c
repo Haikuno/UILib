@@ -6,7 +6,7 @@ static GBL_RESULT UI_Button_init_(GblInstance *pInstance) {
 }
 
 static GBL_RESULT UI_Button_draw_(UI_Widget *pSelf) {
-	GBL_CTX_BEGIN(NULL);
+	GBL_CTX_BEGIN(nullptr);
 	if (!UI_BUTTON(pSelf)->is_active) {
 		pSelf->a        = GBL_MIN(pSelf->a, 40);
 		pSelf->border_a = GBL_MIN(pSelf->border_a, 40);
@@ -56,8 +56,8 @@ static GBL_RESULT UI_ButtonClass_init_(GblClass *pClass, const void *pData) {
 	GBL_OBJECT_CLASS(pClass)->pFnSetProperty = UI_Button_GblObject_setProperty_;
 	GBL_OBJECT_CLASS(pClass)->pFnProperty    = UI_Button_GblObject_property_;
 
-	UI_WIDGET_CLASS(pClass)->pFnActivate   = NULL;
-	UI_WIDGET_CLASS(pClass)->pFnDeactivate = NULL;
+	UI_WIDGET_CLASS(pClass)->pFnActivate   = nullptr;
+	UI_WIDGET_CLASS(pClass)->pFnDeactivate = nullptr;
 	UI_WIDGET_CLASS(pClass)->pFnDraw       = UI_Button_draw_;
 
 	return GBL_RESULT_SUCCESS;

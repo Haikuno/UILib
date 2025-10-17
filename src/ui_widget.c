@@ -22,7 +22,7 @@ static GBL_RESULT UI_Widget_init_(GblInstance *pInstance) {
 	UI_WIDGET(pInstance)->border_a		= 0;
 	UI_WIDGET(pInstance)->border_width	= 2;
 
-	UI_WIDGET(pInstance)->font = NULL;
+	UI_WIDGET(pInstance)->font = nullptr;
 	UI_WIDGET(pInstance)->font_size = 20;
 	UI_WIDGET(pInstance)->font_r = 255;
 	UI_WIDGET(pInstance)->font_g = 255;
@@ -288,7 +288,7 @@ static GBL_RESULT UI_Widget_draw_(UI_Widget *pSelf) {
 
 	if (GblStringBuffer_length(&pSelf->label)) {
 		Font font;
-		if (pSelf->font == NULL) {
+		if (pSelf->font == nullptr) {
 			font = GetFontDefault();
 		} else {
 			font = *(pSelf->font);
@@ -332,8 +332,8 @@ static GBL_RESULT UI_WidgetClass_init_(GblClass *pClass, const void *pData) {
 	GBL_OBJECT_CLASS(pClass)->pFnSetProperty = UI_Widget_GblObject_setProperty_;
 	GBL_OBJECT_CLASS(pClass)->pFnProperty    = UI_Widget_GblObject_property_;
 
-	UI_WIDGET_CLASS(pClass)->pFnActivate	= NULL;
-	UI_WIDGET_CLASS(pClass)->pFnDeactivate	= NULL;
+	UI_WIDGET_CLASS(pClass)->pFnActivate	= nullptr;
+	UI_WIDGET_CLASS(pClass)->pFnDeactivate	= nullptr;
 	UI_WIDGET_CLASS(pClass)->pFnUpdate		= UI_Widget_update_;
 	UI_WIDGET_CLASS(pClass)->pFnDraw		= UI_Widget_draw_;
 
