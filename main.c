@@ -9,7 +9,6 @@ int main(int argc, char *argv[]) {
 	// init raylib
 	InitWindow(640, 480, "UI Widget Example");
 	SetTargetFPS(60);
-	GBL_CONNECT(button, "on_press", test);
 
 	// main loop
 	while (!WindowShouldClose()) {
@@ -17,7 +16,7 @@ int main(int argc, char *argv[]) {
 		BeginDrawing();
 		ClearBackground(RAYWHITE);
 
-		// shrink, enlarge, and move around the container
+		// shrink, enlarge, and move the container around
 		if (IsKeyDown(KEY_RIGHT)) UI_WIDGET(container)->w += 2;
 		if (IsKeyDown(KEY_LEFT))  UI_WIDGET(container)->w -= 2;
 		if (IsKeyDown(KEY_UP))    UI_WIDGET(container)->h -= 2;
