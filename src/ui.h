@@ -4,6 +4,7 @@
 #include "ui_widget.h"
 #include "ui_button.h"
 #include "ui_container.h"
+#include "ui_font.h"
 
 #define UI_update(obj)					(UI_update_(UI_WIDGET(obj)))
 #define UI_draw(obj)					(UI_draw_(UI_WIDGET(obj)))

@@ -25,6 +25,10 @@ GBL_PROPERTIES(UI_Button,
 	(is_active,	GBL_GENERIC, (READ, WRITE), GBL_BOOL_TYPE)
 )
 
+GBL_SIGNALS(UI_Button,
+	(on_press, (GBL_INSTANCE_TYPE, pReceiver))
+)
+
 GblType UI_Button_type(void);
 
 UI_Button* UI_Button_ref(UI_Button* pSelf);

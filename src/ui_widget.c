@@ -22,6 +22,18 @@ static GBL_RESULT UI_Widget_init_(GblInstance *pInstance) {
 	UI_WIDGET(pInstance)->border_a		= 0;
 	UI_WIDGET(pInstance)->border_width	= 2;
 
+	UI_WIDGET(pInstance)->font = NULL;
+	UI_WIDGET(pInstance)->font_size = 20;
+	UI_WIDGET(pInstance)->font_r = 255;
+	UI_WIDGET(pInstance)->font_g = 255;
+	UI_WIDGET(pInstance)->font_b = 255;
+	UI_WIDGET(pInstance)->font_a = 255;
+	UI_WIDGET(pInstance)->font_border_r = 0;
+	UI_WIDGET(pInstance)->font_border_g = 0;
+	UI_WIDGET(pInstance)->font_border_b = 0;
+	UI_WIDGET(pInstance)->font_border_a = 255;
+	UI_WIDGET(pInstance)->font_border_thickness = 1;
+
 	GblStringBuffer_construct(&UI_WIDGET(pInstance)->label);
 	return GBL_RESULT_SUCCESS;
 }
@@ -60,6 +72,14 @@ static GBL_RESULT UI_Widget_GblObject_setProperty_(GblObject *pObject, const Gbl
 			pSelf->border_b = (border_color_ >> 8) & 0xFF;
 			pSelf->border_a = border_color_ & 0xFF;
 			break;
+		case UI_Widget_Property_Id_font_border_color:
+			uint32_t font_border_color_;
+			GblVariant_valueCopy(pValue, &font_border_color_);
+			pSelf->font_border_r = (font_border_color_ >> 24) & 0xFF;
+			pSelf->font_border_g = (font_border_color_ >> 16) & 0xFF;
+			pSelf->font_border_b = (font_border_color_ >> 8) & 0xFF;
+			pSelf->font_border_a = font_border_color_ & 0xFF;
+			break;
 		case UI_Widget_Property_Id_r:
 			GblVariant_valueCopy(pValue, &pSelf->r);
 			break;
@@ -84,11 +104,44 @@ static GBL_RESULT UI_Widget_GblObject_setProperty_(GblObject *pObject, const Gbl
 		case UI_Widget_Property_Id_border_a:
 			GblVariant_valueCopy(pValue, &pSelf->border_a);
 			break;
+		case UI_Widget_Property_Id_border_width:
+			GblVariant_valueCopy(pValue, &pSelf->border_width);
+			break;
 		case UI_Widget_Property_Id_label:
 			GblStringBuffer_set(&pSelf->label, GblVariant_toString(pValue));
 			break;
-		case UI_Widget_Property_Id_border_width:
-			GblVariant_valueCopy(pValue, &pSelf->border_width);
+		case UI_Widget_Property_Id_font_size:
+			GblVariant_valueCopy(pValue, &pSelf->font_size);
+			break;
+		case UI_Widget_Property_Id_font_r:
+			GblVariant_valueCopy(pValue, &pSelf->font_r);
+			break;
+		case UI_Widget_Property_Id_font_g:
+			GblVariant_valueCopy(pValue, &pSelf->font_g);
+			break;
+		case UI_Widget_Property_Id_font_b:
+			GblVariant_valueCopy(pValue, &pSelf->font_b);
+			break;
+		case UI_Widget_Property_Id_font_a:
+			GblVariant_valueCopy(pValue, &pSelf->font_a);
+			break;
+		case UI_Widget_Property_Id_font_border_r:
+			GblVariant_valueCopy(pValue, &pSelf->font_border_r);
+			break;
+		case UI_Widget_Property_Id_font_border_g:
+			GblVariant_valueCopy(pValue, &pSelf->font_border_g);
+			break;
+		case UI_Widget_Property_Id_font_border_b:
+			GblVariant_valueCopy(pValue, &pSelf->font_border_b);
+			break;
+		case UI_Widget_Property_Id_font_border_a:
+			GblVariant_valueCopy(pValue, &pSelf->font_border_a);
+			break;
+		case UI_Widget_Property_Id_font_border_thickness:
+			GblVariant_valueCopy(pValue, &pSelf->font_border_thickness);
+			break;
+		case UI_Widget_Property_Id_font:
+			GblVariant_valueCopy(pValue, &pSelf->font);
 			break;
 		default:
 			return GBL_RESULT_ERROR_INVALID_PROPERTY;
@@ -122,6 +175,9 @@ static GBL_RESULT UI_Widget_GblObject_property_(const GblObject *pObject, const 
 		case UI_Widget_Property_Id_border_color:
 			GblVariant_setUint32(pValue, pSelf->border_r << 24 | pSelf->border_g << 16 | pSelf->border_b << 8 | pSelf->border_a);
 			break;
+		case UI_Widget_Property_Id_font_border_color:
+			GblVariant_setUint32(pValue, pSelf->font_border_r << 24 | pSelf->font_border_g << 16 | pSelf->font_border_b << 8 | pSelf->font_border_a);
+			break;
 		case UI_Widget_Property_Id_r:
 			GblVariant_setUint8(pValue, pSelf->r);
 			break;
@@ -146,8 +202,44 @@ static GBL_RESULT UI_Widget_GblObject_property_(const GblObject *pObject, const 
 		case UI_Widget_Property_Id_border_a:
 			GblVariant_setUint8(pValue, pSelf->border_a);
 			break;
+		case UI_Widget_Property_Id_border_width:
+			GblVariant_setUint8(pValue, pSelf->border_width);
+			break;
 		case UI_Widget_Property_Id_label:
 			GblVariant_setString(pValue, GblStringBuffer_cString(&pSelf->label));
+			break;
+		case UI_Widget_Property_Id_font_size:
+			GblVariant_setUint8(pValue, pSelf->font_size);
+			break;
+		case UI_Widget_Property_Id_font_r:
+			GblVariant_setUint8(pValue, pSelf->font_r);
+			break;
+		case UI_Widget_Property_Id_font_g:
+			GblVariant_setUint8(pValue, pSelf->font_g);
+			break;
+		case UI_Widget_Property_Id_font_b:
+			GblVariant_setUint8(pValue, pSelf->font_b);
+			break;
+		case UI_Widget_Property_Id_font_a:
+			GblVariant_setUint8(pValue, pSelf->font_a);
+			break;
+		case UI_Widget_Property_Id_font_border_r:
+			GblVariant_setUint8(pValue, pSelf->font_border_r);
+			break;
+		case UI_Widget_Property_Id_font_border_g:
+			GblVariant_setUint8(pValue, pSelf->font_border_g);
+			break;
+		case UI_Widget_Property_Id_font_border_b:
+			GblVariant_setUint8(pValue, pSelf->font_border_b);
+			break;
+		case UI_Widget_Property_Id_font_border_a:
+			GblVariant_setUint8(pValue, pSelf->font_border_a);
+			break;
+		case UI_Widget_Property_Id_font_border_thickness:
+			GblVariant_setUint8(pValue, pSelf->font_border_thickness);
+			break;
+		case UI_Widget_Property_Id_font:
+			GblVariant_setPointer(pValue, UI_FONT_TYPE, &pSelf->font);
 			break;
 		default:
 			return GBL_RESULT_ERROR_INVALID_PROPERTY;
@@ -195,10 +287,40 @@ static GBL_RESULT UI_Widget_draw_(UI_Widget *pSelf) {
 	}
 
 	if (GblStringBuffer_length(&pSelf->label)) {
-		int font_size	= 20;
-		int text_width	= MeasureText(GblStringBuffer_cString(&pSelf->label), font_size);
-		DrawText(GblStringBuffer_cString(&pSelf->label), rec.x + (rec.width / 2) - (text_width / 2), rec.y + (rec.height / 2) - (font_size / 2), font_size, (Color){ 255, 255, 255, 255 });
+		Font font;
+		if (pSelf->font == NULL) {
+			font = GetFontDefault();
+		} else {
+			font = *(pSelf->font);
+		}
+
+		Vector2 text_size = MeasureTextEx(font, GblStringBuffer_cString(&pSelf->label), pSelf->font_size, 1);
+		float text_width = text_size.x;
+
+		// border
+		if (pSelf->font_border_a && pSelf->font_border_thickness) {
+			for (int dx = -pSelf->font_border_thickness; dx <= pSelf->font_border_thickness; dx++) {
+				for (int dy = -pSelf->font_border_thickness; dy <= pSelf->font_border_thickness; dy++) {
+					if (dx == 0 && dy == 0) continue;
+
+					DrawTextEx(font,
+						GblStringBuffer_cString(&pSelf->label),
+						(Vector2){ rec.x + (rec.width - text_width) / 2 + dx, rec.y + (rec.height - pSelf->font_size) / 2 + dy },
+						pSelf->font_size,
+						1,
+						(Color){ pSelf->font_border_r, pSelf->font_border_g, pSelf->font_border_b, pSelf->font_border_a });
+				}
+			}
+		}
+
+		DrawTextEx(font,
+			GblStringBuffer_cString(&pSelf->label),
+			(Vector2){ rec.x + (rec.width - text_width) / 2, rec.y + (rec.height - pSelf->font_size) / 2 },
+			(float)pSelf->font_size,
+			1,
+			(Color){ pSelf->font_r, pSelf->font_g, pSelf->font_b, pSelf->font_a });
 	}
+
 }
 
 static GBL_RESULT UI_WidgetClass_init_(GblClass *pClass, const void *pData) {

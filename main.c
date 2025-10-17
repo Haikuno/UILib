@@ -1,20 +1,23 @@
 #include "src/ui.h"
 
 int main(int argc, char *argv[]) {
-	auto container = UI_Container_create("color", 0x444444FF, "orientation", 'v');
-
-	auto button    = UI_Button_create("label", "1", "color", 0x8888FFFF, "border_color", 0xFFFFFFFF);
-	UI_make_child(container, button);
-
 	// init raylib
 	InitWindow(640, 480, "UI Widget Example");
 	SetTargetFPS(60);
+	Font nimbus = LoadFont("../Nimbus.fnt");
+
+	auto container = UI_Container_create("color", 0x444444FF, "orientation", 'v', "padding", 15.0f, "margin", 10.0f);
+	auto button    = UI_Button_create("label", "Example text", "color", 0x8888FFFF, "border_color", 0xFFFFFFFF, "font", &nimbus);
+	UI_make_child(container, button);
 
 	// main loop
 	while (!WindowShouldClose()) {
 
 		BeginDrawing();
 		ClearBackground(RAYWHITE);
+
+		DrawTextEx(nimbus, "Press SPACE to add buttons to the container", 	(Vector2){ 10, 10 }, 20, 1, BLACK);
+		DrawTextEx(nimbus, "Press BACKSPACE to remove them", 				(Vector2){ 10, 40 }, 20, 1, BLACK);
 
 		// shrink, enlarge, and move the container around
 		if (IsKeyDown(KEY_RIGHT)) UI_WIDGET(container)->w += 2;
@@ -31,7 +34,7 @@ int main(int argc, char *argv[]) {
 			size_t count = GblObject_childCount(GBL_OBJECT(container));
 			char buf[16];
 			snprintf(buf, sizeof(buf), "%d", count + 1);
-			auto new_button = UI_Button_create("label", buf, "color", 0x8888FFFF, "border_color", 0xFFFFFFFF);
+			auto new_button = UI_Button_create("label", "Example text", "color", 0x8888FFFF, "border_color", 0xFFFFFFFF, "font", &nimbus);
 			UI_make_child(container, new_button);
 		}
 
