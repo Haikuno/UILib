@@ -13,9 +13,7 @@
 GBL_FORWARD_DECLARE_STRUCT(UI_Container);
 GBL_DECLS_BEGIN
 
-GBL_CLASS_DERIVE(UI_Container, UI_Widget)
-    //
-GBL_CLASS_END
+GBL_CLASS_DERIVE_EMPTY(UI_Container, UI_Widget)
 
 GBL_INSTANCE_DERIVE(UI_Container, UI_Widget)
     char orientation;       // 'h' for horizontal, 'v' for vertical layout of child widgets
@@ -34,8 +32,6 @@ GBL_PROPERTIES(UI_Container,
 )
 
 GblType UI_Container_type(void);
-
-UI_Container *UI_Container_ref(GBL_SELF);
 
 // Takes a list of Name/Value pairs
 #define UI_Container_create(/* property_name, property_value */ ...) GBL_NEW(UI_Container __VA_OPT__(,) __VA_ARGS__)

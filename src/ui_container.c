@@ -46,12 +46,6 @@ static GBL_RESULT UI_Container_update_(UI_Widget *pSelf) {
 	}
 }
 
-static GBL_RESULT UI_Container_draw_(UI_Widget *pSelf) {
-    GBL_CTX_BEGIN(nullptr);
-    GBL_VCALL_DEFAULT(UI_Widget, pFnDraw, pSelf);
-    GBL_CTX_END();
-}
-
 static GBL_RESULT UI_Container_GblObject_setProperty_(GblObject *pObject, const GblProperty *pProp, GblVariant *pValue) {
     UI_Container *pSelf = UI_CONTAINER(pObject);
     switch (pProp->id) {
@@ -114,7 +108,6 @@ static GBL_RESULT UI_ContainerClass_init_(GblClass *pClass, const void *pData) {
     UI_WIDGET_CLASS(pClass)->pFnActivate   = nullptr;
     UI_WIDGET_CLASS(pClass)->pFnDeactivate = nullptr;
     UI_WIDGET_CLASS(pClass)->pFnUpdate     = UI_Container_update_;
-    UI_WIDGET_CLASS(pClass)->pFnDraw       = UI_Container_draw_;
 
     return GBL_RESULT_SUCCESS;
 }

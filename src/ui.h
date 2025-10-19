@@ -1,21 +1,24 @@
 #ifndef UI_LIB_H
 #define UI_LIB_H
 
+#include "ui_root.h"
+#include "ui_controller.h"
 #include "ui_widget.h"
 #include "ui_button.h"
 #include "ui_container.h"
 #include "ui_font.h"
 
 // Takes in an UI element, updates it and all of its children.
-#define UI_update(obj)					(UI_update_		(UI_WIDGET(obj)))
+#define UI_update(obj)					(UI_update_		(GBL_OBJECT(obj)))
 
 // Takes in an UI element, draws it and all of its children.
-#define UI_draw(obj)					(UI_draw_		(UI_WIDGET(obj)))
+#define UI_draw(obj)					(UI_draw_		(GBL_OBJECT(obj)))
 
 // Takes in two UI elements, adds the second one as a child of the first.
-#define UI_add_child(parent, child)		(UI_add_child_	(UI_WIDGET(parent), UI_WIDGET(child)))
+#define UI_add_child(self, child)		(GblObject_addChild(GBL_OBJECT(self), GBL_OBJECT(child)))
 
 // Decrements the reference count of a UI element, freeing it if it reaches zero.
-#define UI_unref(obj)					(UI_unref_		(UI_WIDGET(obj)))
+// Also recursively unrefs all of its children.
+#define UI_unref(obj)					(UI_unref_		(GBL_OBJECT(obj)))
 
 #endif // UI_LIB_H

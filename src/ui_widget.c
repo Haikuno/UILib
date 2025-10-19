@@ -2,6 +2,7 @@
 #include "ui_button.h"
 
 #include "ui_container.h"
+#include "ui_root.h"
 
 static GBL_RESULT UI_Widget_init_(GblInstance *pInstance) {
 	UI_WIDGET(pInstance)->x = 160;
@@ -248,22 +249,6 @@ static GBL_RESULT UI_Widget_GblObject_property_(const GblObject *pObject, const 
 	return GBL_RESULT_SUCCESS;
 }
 
-Vector2 UI_get_absolute_position_(UI_Widget *pWidget) {
-	GblObject	*parent	= GblObject_parent(GBL_OBJECT(pWidget));
-	Vector2		pos		= { pWidget->x, pWidget->y };
-
-	if (!parent || !pWidget->is_relative) {
-		return pos;
-	}
-
-	Vector2 parent_pos = UI_get_absolute_position_(UI_WIDGET(parent));
-
-	pos.x += parent_pos.x;
-	pos.y += parent_pos.y;
-
-	return pos;
-}
-
 static GBL_RESULT UI_Widget_update_(UI_Widget *pSelf) {
 	//
 }
@@ -272,7 +257,7 @@ static GBL_RESULT UI_Widget_draw_(UI_Widget *pSelf) {
 	Rectangle  rec    = (Rectangle){ pSelf->x, pSelf->y, pSelf->w, pSelf->h };
 	GblObject *parent = GblObject_parent(GBL_OBJECT(pSelf));
 
-	if (parent && GBL_TYPEOF(parent) != UI_CONTAINER_TYPE && pSelf->is_relative) {
+	if (parent && GBL_TYPEOF(parent) != UI_ROOT_TYPE && GBL_TYPEOF(parent) != UI_CONTAINER_TYPE && pSelf->is_relative) {
 		Vector2 parent_pos	= UI_get_absolute_position_(UI_WIDGET(parent));
 		rec.x				+= parent_pos.x;
 		rec.y				+= parent_pos.y;
@@ -286,6 +271,7 @@ static GBL_RESULT UI_Widget_draw_(UI_Widget *pSelf) {
 		DrawRectangleLinesEx(rec, pSelf->border_width, (Color){ pSelf->border_r, pSelf->border_g, pSelf->border_b, pSelf->border_a });
 	}
 
+	// text rendering
 	if (GblStringBuffer_length(&pSelf->label)) {
 		Font font;
 		if (pSelf->font == nullptr) {
@@ -297,7 +283,7 @@ static GBL_RESULT UI_Widget_draw_(UI_Widget *pSelf) {
 		Vector2 text_size = MeasureTextEx(font, GblStringBuffer_cString(&pSelf->label), pSelf->font_size, 1);
 		float text_width = text_size.x;
 
-		// border
+		// text border
 		if (pSelf->font_border_a && pSelf->font_border_thickness) {
 			for (int dx = -pSelf->font_border_thickness; dx <= pSelf->font_border_thickness; dx++) {
 				for (int dy = -pSelf->font_border_thickness; dy <= pSelf->font_border_thickness; dy++) {
@@ -341,75 +327,37 @@ static GBL_RESULT UI_WidgetClass_init_(GblClass *pClass, const void *pData) {
 }
 
 GblType UI_Widget_type(void) {
-	// Initialize our type as not registered
 	static GblType type = GBL_INVALID_TYPE;
 
-	// If it's our fist time calling, we have no UUID
 	if (type == GBL_INVALID_TYPE) {
-		// Register the type with libGimbal and store its UUID for later
-		type = // Get fast-ass interned string for name of type
+		type =
 			GblType_register(GblQuark_internStatic("UI_Widget"),
-							 // Parent type you're inheriting from
 							 GBL_OBJECT_TYPE,
-							 // Type information structure
-							 &(static GblTypeInfo){ // Size of your static members + virtaul methods
+							 &(static GblTypeInfo){
 													.classSize = sizeof(UI_WidgetClass),
-													// Class "construtor"
 													.pFnClassInit = UI_WidgetClass_init_,
-													// Size of every instance of the class
 													.instanceSize = sizeof(UI_Widget),
-													// Constructor for each instance
 													.pFnInstanceInit = UI_Widget_init_ },
-							 // Any additional flags
 							 GBL_TYPE_FLAG_TYPEINFO_STATIC);
 	}
 
-	// Return its UUID
 	return type;
 }
 
-void UI_add_child_(UI_Widget *pParent, UI_Widget *pChild) {
-	GblObject_setParent(GBL_OBJECT(pChild), GBL_OBJECT(pParent));
-}
+/// General UI widget functions ///
 
-GBL_RESULT UI_update_(UI_Widget *pSelf) {
-	UI_WIDGET_GET_CLASS(pSelf)->pFnUpdate(pSelf);
+Vector2 UI_get_absolute_position_(UI_Widget *pWidget) {
+	GblObject	*parent	= GblObject_parent(GBL_OBJECT(pWidget));
+	Vector2		pos		= { pWidget->x, pWidget->y };
 
-	size_t child_count = GblObject_childCount(GBL_OBJECT(pSelf));
-
-	for (size_t i = 0; i < child_count; ++i) {
-		GblObject *child_obj = GblObject_findChildByIndex(GBL_OBJECT(pSelf), i);
-		UI_update_(UI_WIDGET(child_obj));
+	if (!parent || !pWidget->is_relative) {
+		return pos;
 	}
 
-	return GBL_RESULT_SUCCESS;
-}
+	Vector2 parent_pos = UI_get_absolute_position_(UI_WIDGET(parent));
 
-GBL_RESULT UI_draw_(UI_Widget *pSelf) {
-	UI_WIDGET_GET_CLASS(pSelf)->pFnDraw(pSelf);
+	pos.x += parent_pos.x;
+	pos.y += parent_pos.y;
 
-	size_t child_count = GblObject_childCount(GBL_OBJECT(pSelf));
-
-	for (size_t i = 0; i < child_count; ++i) {
-		GblObject *child_obj = GblObject_findChildByIndex(GBL_OBJECT(pSelf), i);
-		UI_draw_(UI_WIDGET(child_obj));
-	}
-
-	return GBL_RESULT_SUCCESS;
-}
-
-UI_Widget *UI_Widget_ref(UI_Widget *pSelf) {
-	return UI_WIDGET(GBL_REF(pSelf));
-}
-
-void UI_unref_(UI_Widget *pSelf) {
-	const char *name	= GblType_name(GBL_TYPEOF(pSelf));
-	size_t child_count	= GblObject_childCount(GBL_OBJECT(pSelf));
-
-	for (size_t i = 0; i < child_count; ++i) {
-		GblObject *child_obj = GblObject_findChildByIndex(GBL_OBJECT(pSelf), i);
-		UI_unref_(UI_WIDGET(child_obj));
-	}
-
-	GBL_UNREF(pSelf);
+	return pos;
 }

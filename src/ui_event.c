@@ -13,6 +13,6 @@ GblType UI_Event_type(void) {
 													.instanceSize = sizeof(UI_Event),},
 							 GBL_TYPE_FLAG_TYPEINFO_STATIC);
 	}
-	
+
 	return type;
 }

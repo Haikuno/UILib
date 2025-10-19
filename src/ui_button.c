@@ -11,7 +11,6 @@ static GBL_RESULT UI_Button_draw_(UI_Widget *pSelf) {
 		pSelf->a        = GBL_MIN(pSelf->a, 40);
 		pSelf->border_a = GBL_MIN(pSelf->border_a, 40);
 	}
-	// GBL_EMIT(pSelf, "on_press");
 	GBL_VCALL_DEFAULT(UI_Widget, pFnDraw, pSelf);
 	GBL_CTX_END();
 }
@@ -65,30 +64,20 @@ static GBL_RESULT UI_ButtonClass_init_(GblClass *pClass, const void *pData) {
 
 
 GblType UI_Button_type(void) {
-	// Initialize our type as not registered
 	static GblType type = GBL_INVALID_TYPE;
 
-	// If it's our fist time calling, we have no UUID
 	if (type == GBL_INVALID_TYPE) {
-		// Register the type with libGimbal and store its UUID for later
-		type = // Get fast-ass interned string for name of type
+		type =
 			GblType_register(GblQuark_internStatic("UI_Button"),
-							 // Parent type you're inheriting from
 							 UI_WIDGET_TYPE,
-							 // Type information structure
-							 &(static GblTypeInfo){ // Size of your static members + virtaul methods
+							 &(static GblTypeInfo){
 													.classSize = sizeof(UI_ButtonClass),
-													// Class "construtor"
 													.pFnClassInit = UI_ButtonClass_init_,
-													// Size of every instance of the class
 													.instanceSize = sizeof(UI_Button),
-													// Constructor for each instance
 													.pFnInstanceInit = UI_Button_init_ },
-							 // Any additional flags
 							 GBL_TYPE_FLAG_TYPEINFO_STATIC);
 
 	}
 
-	// Return its UUID
 	return type;
 }
