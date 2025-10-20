@@ -25,22 +25,46 @@ void check_input(UI_Controller *controller) {
 	}
 }
 
+void add_new_button_as_sibling (UI_Button *pSelf) {
+	auto new_button = UI_Button_create("label", "dynamic button", "color", 0x8888FFFF, "border_color", 0xFFFFFFFF);
+	UI_add_child(GblObject_parent(GBL_OBJECT(pSelf)), new_button);
+}
+
+void add_new_container_as_parents_sibling (UI_Button *pSelf) {
+	GblObject *pParent = GblObject_parent(GBL_OBJECT(pSelf));
+
+	const char orientation = rand() % 2 == 0 ? 'h' : 'v';
+
+	auto new_container = UI_Container_create("color", 0x444444FF, "orientation", orientation, "padding", 15.0f, "margin", 10.0f);
+	UI_add_child(GblObject_parent(pParent), new_container);
+
+	auto button_1		= UI_Button_create("label", "new_button", "color", 0x8888FFFF, "border_color", 0xFFFFFFFF);
+	GBL_CONNECT(button_1, "on_press", add_new_button_as_sibling);
+	UI_add_child(new_container, button_1);
+}
+
 int main(int argc, char *argv[]) {
 	// init raylib
 	InitWindow(640, 480, "UI Widget Example");
 	SetTargetFPS(60);
 	Font nimbus = LoadFont("./Nimbus.fnt");
 
-	auto root		= UI_Root_create();
-	auto controller = UI_Controller_create();
-	auto container	= UI_Container_create("color", 0x444444FF, "orientation", 'v', "padding", 15.0f, "margin", 10.0f);
-	auto button		= UI_Button_create("label", "Example text", "color", 0x8888FFFF, "border_color", 0xFFFFFFFF, "font", &nimbus);
-	auto button_2	= UI_Button_create("label", "Example text 2", "color", 0x8888FFFF, "border_color", 0xFFFFFFFF, "font", &nimbus);
+	auto root			= UI_Root_create();
+	auto controller		= UI_Controller_create();
+	auto main_container = UI_Container_create("color", 0x00000000, "orientation", 'h', "w", 640.0f, "h", 480.0f, "x", 0.0f, "y", 0.0f);
+	auto container_1	= UI_Container_create("color", 0x444444FF, "orientation", 'v', "padding", 15.0f, "margin", 10.0f);
+	auto button_1		= UI_Button_create("label", "new_button", "color", 0x8888FFFF, "border_color", 0xFFFFFFFF);
+	auto button_2		= UI_Button_create("label", "new_container", "color", 0x8888FFFF, "border_color", 0xFFFFFFFF);
+
 
 	UI_add_child(root, controller);
-	UI_add_child(root, container);
-	UI_add_child(container, button);
-	UI_add_child(container, button_2);
+	UI_add_child(root, main_container);
+	UI_add_child(main_container, container_1);
+	UI_add_child(container_1, button_1);
+	UI_add_child(container_1, button_2);
+
+	GBL_CONNECT(button_1, "on_press", add_new_button_as_sibling);
+	GBL_CONNECT(button_2, "on_press", add_new_container_as_parents_sibling);
 
 	// main loop
 	while (!WindowShouldClose()) {

@@ -1,7 +1,9 @@
 #include "ui_button.h"
 
 static GBL_RESULT UI_Button_init_(GblInstance *pInstance) {
-	UI_BUTTON(pInstance)->is_active = true;
+	UI_BUTTON(pInstance)->is_active		= true;
+	UI_BUTTON(pInstance)->is_selectable	= true;
+	UI_BUTTON(pInstance)->is_selected	= false;
 	return GBL_RESULT_SUCCESS;
 }
 
@@ -11,6 +13,17 @@ static GBL_RESULT UI_Button_draw_(UI_Widget *pSelf) {
 		pSelf->a        = GBL_MIN(pSelf->a, 40);
 		pSelf->border_a = GBL_MIN(pSelf->border_a, 40);
 	}
+
+	if (UI_BUTTON(pSelf)->is_selected) {
+		pSelf->border_a        = 200;
+		pSelf->border_r        = 255;
+		pSelf->border_g        = 255;
+		pSelf->border_b        = 255;
+		pSelf->border_width	   = 10;
+	} else {
+		pSelf->border_a = 0;
+	}
+
 	GBL_VCALL_DEFAULT(UI_Widget, pFnDraw, pSelf);
 	GBL_CTX_END();
 }
@@ -20,6 +33,9 @@ static GBL_RESULT UI_Button_GblObject_setProperty_(GblObject *pObject, const Gbl
 	switch (pProp->id) {
 		case UI_Button_Property_Id_is_active:
 			GblVariant_valueCopy(pValue, &pSelf->is_active);
+			break;
+		case UI_Button_Property_Id_is_selectable:
+			GblVariant_valueCopy(pValue, &pSelf->is_selectable);
 			break;
 		default:
 			return GBL_RESULT_ERROR_INVALID_PROPERTY;
@@ -34,6 +50,9 @@ static GBL_RESULT UI_Button_GblObject_property_(const GblObject *pObject, const 
 	switch (pProp->id) {
 		case UI_Button_Property_Id_is_active:
 			GblVariant_setBool(pValue, pSelf->is_active);
+			break;
+		case UI_Button_Property_Id_is_selectable:
+			GblVariant_setBool(pValue, pSelf->is_selectable);
 			break;
 		default:
 			return GBL_RESULT_ERROR_INVALID_PROPERTY;

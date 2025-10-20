@@ -1,4 +1,5 @@
 #include "ui_controller.h"
+#include "ui_buttonevent.h"
 
 static GBL_RESULT UI_ControllerClass_init_(GblClass *pClass, const void *pData) {
 	GBL_UNUSED(pData);
@@ -10,15 +11,7 @@ static GBL_RESULT UI_Controller_init_(GblInstance *pInstance) {
 }
 
 void UI_Controller_notify_button(UI_Controller *pSelf, UI_CONTROLLER_BUTTON_STATE state, UI_CONTROLLER_BUTTON button) {
-	UI_ButtonEvent* pEvent =
-		(UI_ButtonEvent *)GblBox_create(UI_EVENT_TYPE,
-										sizeof(UI_ButtonEvent),
-										nullptr,
-										nullptr,
-										nullptr);
-	pEvent->state = state;
-	pEvent->button = button;
-
+	UI_ButtonEvent *pEvent = UI_ButtonEvent_create(pSelf, state, button);
 	GblObject_sendEvent(GBL_OBJECT(pSelf), GBL_EVENT(pEvent));
 }
 

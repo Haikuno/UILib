@@ -1,6 +1,7 @@
 #ifndef UI_CONTROLLER_H
 #define UI_CONTROLLER_H
 
+#include "ui_button.h"
 #include "ui_buttonevent.h"
 
 #define UI_CONTROLLER_TYPE					(GBL_TYPEID(UI_Controller))
@@ -15,7 +16,9 @@ GBL_DECLS_BEGIN
 
 GBL_CLASS_DERIVE_EMPTY(UI_Controller, GblObject)
 
-GBL_INSTANCE_DERIVE_EMPTY(UI_Controller, GblObject)
+GBL_INSTANCE_DERIVE(UI_Controller, GblObject)
+	UI_Button* pSelectedButton;
+GBL_INSTANCE_END
 
 GblType UI_Controller_type(void);
 

@@ -24,6 +24,6 @@ typedef struct {
     UI_CONTROLLER_BUTTON 		button;	// which button pressed?
 } UI_ButtonEvent;
 
-UI_ButtonEvent *UI_ButtonEvent_create(UI_CONTROLLER_BUTTON_STATE state, UI_CONTROLLER_BUTTON button);
+UI_ButtonEvent *UI_ButtonEvent_create(void *pController, UI_CONTROLLER_BUTTON_STATE state, UI_CONTROLLER_BUTTON button);
 
 #endif
