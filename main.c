@@ -52,16 +52,20 @@ int main(int argc, char *argv[]) {
 	auto root			= UI_Root_create();
 	auto controller		= UI_Controller_create();
 	auto main_container = UI_Container_create("color", 0x00000000, "orientation", 'h', "w", 640.0f, "h", 480.0f, "x", 0.0f, "y", 0.0f);
-	auto container_1	= UI_Container_create("color", 0x444444FF, "orientation", 'v', "padding", 15.0f, "margin", 10.0f);
+	auto container_1	= UI_Container_create("color", 0x444444FF, "orientation", 'h', "padding", 15.0f, "margin", 10.0f);
 	auto button_1		= UI_Button_create("label", "new_button", "color", 0x8888FFFF, "border_color", 0xFFFFFFFF);
 	auto button_2		= UI_Button_create("label", "new_container", "color", 0x8888FFFF, "border_color", 0xFFFFFFFF);
 
+	Texture2D texture	= LoadTexture("./fish.png");
+	auto widget			= UI_Widget_create("texture", &texture, "label", "cool fish!", "color", 0x8888FFFF);
 
-	UI_add_child(root, controller);
+
 	UI_add_child(root, main_container);
+	UI_add_child(root, controller);
 	UI_add_child(main_container, container_1);
 	UI_add_child(container_1, button_1);
 	UI_add_child(container_1, button_2);
+	UI_add_child(container_1, widget);
 
 	GBL_CONNECT(button_1, "on_press", add_new_button_as_sibling);
 	GBL_CONNECT(button_2, "on_press", add_new_container_as_parents_sibling);
@@ -76,6 +80,7 @@ int main(int argc, char *argv[]) {
 		// only need to call update and draw on the top-most parent (usually root)
 		UI_update(root);
 		UI_draw(root);
+
 
 		EndDrawing();
 	}

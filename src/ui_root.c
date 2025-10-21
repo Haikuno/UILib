@@ -182,7 +182,6 @@ static UI_Button *move_cursor(GblObject *pSelf, UI_CONTROLLER_BUTTON button_pres
         goto GET_BUTTON_FROM_NEW_CONTAINER;
 
     GET_BUTTON_FROM_NEW_CONTAINER:
-
         if (parent_orientation == grand_parent_orientation) {
             if (dir == 'p') {
                 // we move to the last button in the new container
@@ -216,52 +215,70 @@ static UI_Button *move_cursor(GblObject *pSelf, UI_CONTROLLER_BUTTON button_pres
         }
 
         if (parent_orientation != grand_parent_orientation) {
-            // if the new container has enough buttons, we try to move to the same index
-            if (GblObject_childCount(pNewContainer) > child_index) {
-                newButton = GBL_AS(UI_Button, GblObject_findChildByIndex(pNewContainer, child_index));
 
-                // if the new button is selectable, we move to it
-                if (newButton != nullptr && newButton->is_selectable) {
-                    return newButton;
-                }
+            if (UI_CONTAINER(pNewContainer)->orientation == parent_orientation) {
+                // if the new container has enough buttons, we try to move to the same index
+                if (GblObject_childCount(pNewContainer) > child_index) {
+                    newButton = GBL_AS(UI_Button, GblObject_findChildByIndex(pNewContainer, child_index));
 
-                // otherwise, we move to the first previous selectable button in the new container
-                newObject = find_previous_sibling_of_type(GBL_OBJECT(newButton), UI_BUTTON_TYPE);
-                while (newObject != nullptr) {
-                    newButton = GBL_AS(UI_Button, find_previous_sibling_of_type(GBL_OBJECT(newButton), UI_BUTTON_TYPE));
+                    // if the new button is selectable, we move to it
                     if (newButton != nullptr && newButton->is_selectable) {
                         return newButton;
                     }
-                }
 
-                // otherwise, we move to the first next selectable button in the new container
-                newObject = find_next_sibling_of_type(GBL_OBJECT(newButton), UI_BUTTON_TYPE);
+                    // otherwise, we move to the first previous selectable button in the new container
+                    newObject = find_previous_sibling_of_type(GBL_OBJECT(newButton), UI_BUTTON_TYPE);
+                    while (newObject != nullptr) {
+                        newButton = GBL_AS(UI_Button, find_previous_sibling_of_type(GBL_OBJECT(newButton), UI_BUTTON_TYPE));
+                        if (newButton != nullptr && newButton->is_selectable) {
+                            return newButton;
+                        }
+                    }
+
+                    // otherwise, we move to the first next selectable button in the new container
+                    newObject = find_next_sibling_of_type(GBL_OBJECT(newButton), UI_BUTTON_TYPE);
+                    while (newObject != nullptr) {
+                        newButton = GBL_AS(UI_Button, newObject);
+                        if (newButton != nullptr && newButton->is_selectable) {
+                            return newButton;
+                        }
+                    }
+
+                    return nullptr;
+                }
+            }
+
+            if(dir == 'p') {
+                // we move to the last selectable button in the new container
+                newObject = find_descendant_of_type(pNewContainer, UI_BUTTON_TYPE);
+                newButton = GBL_AS(UI_Button, newObject);
+
                 while (newObject != nullptr) {
+                    newObject = find_next_sibling_of_type(GBL_OBJECT(newObject), UI_BUTTON_TYPE);
+                    if (newObject == nullptr) {
+                        if (newButton != nullptr && newButton->is_selectable) {
+                            return newButton;
+                        }
+                        return nullptr;
+                    }
+
                     newButton = GBL_AS(UI_Button, newObject);
-                    if (newButton != nullptr && newButton->is_selectable) {
-                        return newButton;
-                    }
                 }
-
                 return nullptr;
             }
 
-            // otherwise, we move to the last button in the new container
-            newObject = find_descendant_of_type(pNewContainer, UI_BUTTON_TYPE);
-            newButton = GBL_AS(UI_Button, newObject);
-
-            while (newObject != nullptr) {
-                newObject = find_next_sibling_of_type(GBL_OBJECT(newObject), UI_BUTTON_TYPE);
-                if (newObject == nullptr) {
-                    if (newButton != nullptr && newButton->is_selectable) {
-                        return newButton;
-                    }
-                    return nullptr;
+            if (dir == 'n') {
+                // we move to the first selectable button in the new container
+                newObject = find_descendant_of_type(pNewContainer, UI_BUTTON_TYPE);
+                while (newObject != nullptr) {
+                    newButton = GBL_AS(UI_Button, newObject);
+                    if (newButton && newButton->is_selectable) return newButton;
+                    newObject = find_next_sibling_of_type(newObject, UI_BUTTON_TYPE);
                 }
-
-                newButton = GBL_AS(UI_Button, newObject);
+                return nullptr;
             }
-            return nullptr;
+
+
         }
 
         return nullptr;

@@ -23,6 +23,7 @@ static GBL_RESULT UI_Widget_init_(GblInstance *pInstance) {
 	UI_WIDGET(pInstance)->border_a		= 0;
 	UI_WIDGET(pInstance)->border_width	= 2;
 
+	UI_WIDGET(pInstance)->text_alignment = UI_TEXT_ALIGN_CENTER;
 	UI_WIDGET(pInstance)->font = nullptr;
 	UI_WIDGET(pInstance)->font_size = 20;
 	UI_WIDGET(pInstance)->font_r = 255;
@@ -34,6 +35,8 @@ static GBL_RESULT UI_Widget_init_(GblInstance *pInstance) {
 	UI_WIDGET(pInstance)->font_border_b = 0;
 	UI_WIDGET(pInstance)->font_border_a = 255;
 	UI_WIDGET(pInstance)->font_border_thickness = 1;
+
+	UI_WIDGET(pInstance)->texture = nullptr;
 
 	GblStringBuffer_construct(&UI_WIDGET(pInstance)->label);
 	return GBL_RESULT_SUCCESS;
@@ -111,6 +114,9 @@ static GBL_RESULT UI_Widget_GblObject_setProperty_(GblObject *pObject, const Gbl
 		case UI_Widget_Property_Id_label:
 			GblStringBuffer_set(&pSelf->label, GblVariant_toString(pValue));
 			break;
+		case UI_Widget_Property_Id_text_alignment:
+			GblVariant_valueCopy(pValue, &pSelf->text_alignment);
+			break;
 		case UI_Widget_Property_Id_font_size:
 			GblVariant_valueCopy(pValue, &pSelf->font_size);
 			break;
@@ -143,6 +149,9 @@ static GBL_RESULT UI_Widget_GblObject_setProperty_(GblObject *pObject, const Gbl
 			break;
 		case UI_Widget_Property_Id_font:
 			GblVariant_valueCopy(pValue, &pSelf->font);
+			break;
+		case UI_Widget_Property_Id_texture:
+			GblVariant_valueCopy(pValue, &pSelf->texture);
 			break;
 		default:
 			return GBL_RESULT_ERROR_INVALID_PROPERTY;
@@ -209,6 +218,9 @@ static GBL_RESULT UI_Widget_GblObject_property_(const GblObject *pObject, const 
 		case UI_Widget_Property_Id_label:
 			GblVariant_setString(pValue, GblStringBuffer_cString(&pSelf->label));
 			break;
+		case UI_Widget_Property_Id_text_alignment:
+			GblVariant_setEnum(pValue, UI_TEXT_ALIGNMENT_TYPE, pSelf->text_alignment);
+			break;
 		case UI_Widget_Property_Id_font_size:
 			GblVariant_setUint8(pValue, pSelf->font_size);
 			break;
@@ -242,6 +254,9 @@ static GBL_RESULT UI_Widget_GblObject_property_(const GblObject *pObject, const 
 		case UI_Widget_Property_Id_font:
 			GblVariant_setPointer(pValue, UI_FONT_TYPE, &pSelf->font);
 			break;
+		case UI_Widget_Property_Id_texture:
+			GblVariant_setPointer(pValue, UI_TEXTURE_TYPE, &pSelf->texture);
+			break;
 		default:
 			return GBL_RESULT_ERROR_INVALID_PROPERTY;
 	}
@@ -271,7 +286,11 @@ static GBL_RESULT UI_Widget_draw_(UI_Widget *pSelf) {
 		DrawRectangleLinesEx(rec, pSelf->border_width, (Color){ pSelf->border_r, pSelf->border_g, pSelf->border_b, pSelf->border_a });
 	}
 
-	// text rendering
+	// text and texture rendering
+	Vector2 text_size	= { 0, 0 };
+	Vector2 text_pos	= { 0, 0 };
+	const float margin	= 3.0f;
+
 	if (GblStringBuffer_length(&pSelf->label)) {
 		Font font;
 		if (pSelf->font == nullptr) {
@@ -280,8 +299,32 @@ static GBL_RESULT UI_Widget_draw_(UI_Widget *pSelf) {
 			font = *(pSelf->font);
 		}
 
-		Vector2 text_size = MeasureTextEx(font, GblStringBuffer_cString(&pSelf->label), pSelf->font_size, 1);
-		float text_width = text_size.x;
+		text_size = MeasureTextEx(font, GblStringBuffer_cString(&pSelf->label), pSelf->font_size, 1);
+
+		switch (pSelf->text_alignment) {
+			case UI_TEXT_ALIGN_CENTER:
+				text_pos = (Vector2){ rec.x + (rec.width - text_size.x) / 2, rec.y + rec.height / 2 - text_size.y / 2 };
+
+				// can't align to the center if there's a texture, so default to bottom
+				if (pSelf->texture) {
+					text_pos = (Vector2){ rec.x + (rec.width - text_size.x) / 2, rec.y + rec.height - text_size.y - margin };
+				}
+
+				break;
+			case UI_TEXT_ALIGN_TOP:
+				text_pos = (Vector2){ rec.x + (rec.width - text_size.x) / 2, rec.y + text_size.y / 2 + margin };
+				break;
+			case UI_TEXT_ALIGN_RIGHT:
+				text_pos = (Vector2){ rec.x + rec.width - text_size.x - margin, rec.y + (rec.height - text_size.y) / 2 };
+				break;
+			case UI_TEXT_ALIGN_BOTTOM:
+				text_pos = (Vector2){ rec.x + (rec.width - text_size.x) / 2, rec.y + rec.height - text_size.y - margin };
+				break;
+			case UI_TEXT_ALIGN_LEFT:
+				text_pos = (Vector2){ rec.x + margin, rec.y + (rec.height - pSelf->font_size) / 2 };
+				break;
+		}
+
 
 		// text border
 		if (pSelf->font_border_a && pSelf->font_border_thickness) {
@@ -291,7 +334,7 @@ static GBL_RESULT UI_Widget_draw_(UI_Widget *pSelf) {
 
 					DrawTextEx(font,
 						GblStringBuffer_cString(&pSelf->label),
-						(Vector2){ rec.x + (rec.width - text_width) / 2 + dx, rec.y + (rec.height - pSelf->font_size) / 2 + dy },
+						(Vector2){ text_pos.x + dx, text_pos.y + dy },
 						pSelf->font_size,
 						1,
 						(Color){ pSelf->font_border_r, pSelf->font_border_g, pSelf->font_border_b, pSelf->font_border_a });
@@ -301,12 +344,39 @@ static GBL_RESULT UI_Widget_draw_(UI_Widget *pSelf) {
 
 		DrawTextEx(font,
 			GblStringBuffer_cString(&pSelf->label),
-			(Vector2){ rec.x + (rec.width - text_width) / 2, rec.y + (rec.height - pSelf->font_size) / 2 },
+			text_pos,
 			(float)pSelf->font_size,
 			1,
 			(Color){ pSelf->font_r, pSelf->font_g, pSelf->font_b, pSelf->font_a });
 	}
 
+
+	if (pSelf->texture != nullptr) {
+		Vector2 texture_size	= { (float)pSelf->texture->width, (float)pSelf->texture->height };
+		Vector2 texture_pos		= { rec.x, rec.y };
+
+		// adjust texture size based on pSelf size
+		if (texture_size.x > rec.width) {
+			texture_size.x = rec.width;
+		}
+
+		if (texture_size.y > rec.height) {
+			texture_size.y = rec.height;
+		}
+
+		// adjust texture position based on text size, position and alignment
+
+		// switch (pSelf->text_alignment) {
+		// 	case UI_TEXT_ALIGN_CENTER:
+		// 	case UI_TEXT_ALIGN_BOTTOM:
+		// }
+
+
+		Rectangle src = { 0, 0, (float)pSelf->texture->width, (float)pSelf->texture->height };
+		Rectangle dst = { texture_pos.x, texture_pos.y, texture_size.x, texture_size.y };
+
+		DrawTexturePro(*pSelf->texture, src, dst, (Vector2){ 0, 0 }, 0.0f, (Color){ 255, 255, 255, 255 });
+	}
 }
 
 static GBL_RESULT UI_WidgetClass_init_(GblClass *pClass, const void *pData) {
@@ -340,8 +410,6 @@ GblType UI_Widget_type(void) {
 													.pFnInstanceInit = UI_Widget_init_ },
 							 GBL_TYPE_FLAG_TYPEINFO_STATIC);
 	}
-
-	return type;
 }
 
 /// General UI widget functions ///
