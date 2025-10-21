@@ -3,7 +3,6 @@ project(UILib)
 
 set(CMAKE_C_STANDARD 23)
 set(CMAKE_C_STANDARD_REQUIRED ON)
-set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/build)
 
 add_subdirectory(libgimbal)
 

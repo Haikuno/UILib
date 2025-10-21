@@ -39,23 +39,16 @@ static GblObject *GblObject_siblingPrevious(GblObject *pSelf) {
     return nullptr;
 }
 
-// TODO: try not creating a variable, might work
 static GblObject *GblObject_siblingPreviousByType(GblObject *pSelf, GblType type) {
-    GblObject *pObj = pSelf;
-
-    do pObj = GblObject_siblingPrevious(pObj);
-    while (pObj != nullptr && GBL_TYPEOF(pObj) != type);
-
-    return pObj;
+    do pSelf = GblObject_siblingPrevious(pSelf);
+    while (pSelf != nullptr && GBL_TYPEOF(pSelf) != type);
+    return pSelf;
 }
 
 static GblObject *GblObject_siblingNextByType(GblObject *pSelf, GblType type) {
-    GblObject *pObj = pSelf;
-
-    do pObj = GblObject_siblingNext(pObj);
-    while (pObj != nullptr && GBL_TYPEOF(pObj) != type);
-
-    return pObj;
+    do pSelf = GblObject_siblingNext(pSelf);
+    while (pSelf != nullptr && GBL_TYPEOF(pSelf) != type);
+    return pSelf;
 }
 
 static GblObject *GblObject_findDescendantByType(GblObject *pSelf, GblType descendantType) {
