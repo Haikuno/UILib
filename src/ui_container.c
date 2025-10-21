@@ -6,6 +6,7 @@ static GBL_RESULT UI_Container_init_(GblInstance *pInstance) {
     UI_CONTAINER(pInstance)->align_widgets  = true;
     UI_CONTAINER(pInstance)->padding        = 5.0f;
     UI_CONTAINER(pInstance)->margin         = 5.0f;
+    UI_CONTAINER(pInstance)->orientation    = 'v';
     return GBL_RESULT_SUCCESS;
 }
 
@@ -48,6 +49,7 @@ static GBL_RESULT UI_Container_update_(UI_Widget *pSelf) {
 
 static GBL_RESULT UI_Container_GblObject_setProperty_(GblObject *pObject, const GblProperty *pProp, GblVariant *pValue) {
     UI_Container *pSelf = UI_CONTAINER(pObject);
+
     switch (pProp->id) {
         case UI_Container_Property_Id_orientation:
             GblVariant_valueCopy(pValue, &pSelf->orientation);

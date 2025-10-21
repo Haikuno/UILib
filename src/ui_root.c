@@ -174,11 +174,23 @@ static UI_Button *move_cursor(GblObject *pSelf, UI_CONTROLLER_BUTTON button_pres
     MOVE_TO_PREVIOUS_CONTAINER:
         pNewContainer = find_previous_sibling_of_type(pParent, UI_CONTAINER_TYPE);
         if (!pNewContainer) return nullptr;
+        GblObject *buttonCheck = find_descendant_of_type(pNewContainer, UI_BUTTON_TYPE);
+        while (buttonCheck == nullptr) {
+            pNewContainer = find_previous_sibling_of_type(pNewContainer, UI_CONTAINER_TYPE);
+            if (!pNewContainer) return nullptr;
+            buttonCheck = find_descendant_of_type(pNewContainer, UI_BUTTON_TYPE);
+        }
         goto GET_BUTTON_FROM_NEW_CONTAINER;
 
     MOVE_TO_NEXT_CONTAINER:
         pNewContainer = find_next_sibling_of_type(pParent, UI_CONTAINER_TYPE);
         if (!pNewContainer) return nullptr;
+        buttonCheck = find_descendant_of_type(pNewContainer, UI_BUTTON_TYPE);
+        while (buttonCheck == nullptr) {
+            pNewContainer = find_next_sibling_of_type(pNewContainer, UI_CONTAINER_TYPE);
+            if (!pNewContainer) return nullptr;
+            buttonCheck = find_descendant_of_type(pNewContainer, UI_BUTTON_TYPE);
+        }
         goto GET_BUTTON_FROM_NEW_CONTAINER;
 
     GET_BUTTON_FROM_NEW_CONTAINER:

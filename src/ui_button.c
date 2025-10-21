@@ -19,7 +19,7 @@ static GBL_RESULT UI_Button_draw_(UI_Widget *pSelf) {
 		pSelf->border_r        = 255;
 		pSelf->border_g        = 255;
 		pSelf->border_b        = 255;
-		pSelf->border_width	   = 10;
+		pSelf->border_width	   = 4;
 	} else {
 		pSelf->border_a = 0;
 	}
