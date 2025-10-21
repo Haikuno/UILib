@@ -64,22 +64,24 @@ static GBL_RESULT UI_Button_GblObject_property_(const GblObject *pObject, const 
 static GBL_RESULT UI_ButtonClass_init_(GblClass *pClass, const void *pData) {
 	GBL_UNUSED(pData);
 
-	if (!GblType_classRefCount(GBL_CLASS_TYPEOF(pClass))) GBL_PROPERTIES_REGISTER(UI_Button);
+	if (!GblType_classRefCount(GBL_CLASS_TYPEOF(pClass))) {
+		GBL_PROPERTIES_REGISTER(UI_Button);
 
-	GblSignal_install(  UI_BUTTON_TYPE,
-						"onPressPrimary",
-						GblMarshal_CClosure_VOID__INSTANCE,
-						0);
+		GblSignal_install(  UI_BUTTON_TYPE,
+							"onPressPrimary",
+							GblMarshal_CClosure_VOID__INSTANCE,
+							0);
 
-	GblSignal_install(  UI_BUTTON_TYPE,
-						"onPressSecondary",
-						GblMarshal_CClosure_VOID__INSTANCE,
-						0);
+		GblSignal_install(  UI_BUTTON_TYPE,
+							"onPressSecondary",
+							GblMarshal_CClosure_VOID__INSTANCE,
+							0);
 
-	GblSignal_install(  UI_BUTTON_TYPE,
-						"onPressTertiary",
-						GblMarshal_CClosure_VOID__INSTANCE,
-						0);
+		GblSignal_install(  UI_BUTTON_TYPE,
+							"onPressTertiary",
+							GblMarshal_CClosure_VOID__INSTANCE,
+							0);
+	}
 
 	GBL_OBJECT_CLASS(pClass)->pFnSetProperty = UI_Button_GblObject_setProperty_;
 	GBL_OBJECT_CLASS(pClass)->pFnProperty    = UI_Button_GblObject_property_;
@@ -91,6 +93,15 @@ static GBL_RESULT UI_ButtonClass_init_(GblClass *pClass, const void *pData) {
 	return GBL_RESULT_SUCCESS;
 }
 
+static GBL_RESULT UI_ButtonClass_final_(GblClass* pClass, const void* pClassData) {
+    GBL_UNUSED(pClassData);
+
+    if(!GblType_classRefCount(GBL_CLASS_TYPEOF(pClass))) {
+        GblSignal_uninstall(UI_BUTTON_TYPE, "onPressPrimary");
+		GblSignal_uninstall(UI_BUTTON_TYPE, "onPressSecondary");
+		GblSignal_uninstall(UI_BUTTON_TYPE, "onPressTertiary");
+    }
+}
 
 GblType UI_Button_type(void) {
 	static GblType type = GBL_INVALID_TYPE;
@@ -103,7 +114,8 @@ GblType UI_Button_type(void) {
 													.classSize = sizeof(UI_ButtonClass),
 													.pFnClassInit = UI_ButtonClass_init_,
 													.instanceSize = sizeof(UI_Button),
-													.pFnInstanceInit = UI_Button_init_ },
+													.pFnInstanceInit = UI_Button_init_,
+													.pFnClassFinal = UI_ButtonClass_final_ },
 							 GBL_TYPE_FLAG_TYPEINFO_STATIC);
 
 	}
