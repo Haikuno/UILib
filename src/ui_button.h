@@ -16,25 +16,29 @@ GBL_DECLS_BEGIN
 GBL_CLASS_DERIVE_EMPTY(UI_Button, UI_Widget)
 
 GBL_INSTANCE_DERIVE(UI_Button, UI_Widget)
-	bool is_active;
-	bool is_selectable;
-	bool is_selected;
-	bool is_default; // is selected by default when no other button is selected
+	bool isActive;
+	bool isSelectable;
+	bool isSelected;
 GBL_INSTANCE_END
 
 GBL_PROPERTIES(UI_Button,
-	(is_active,		GBL_GENERIC, (READ, WRITE), GBL_BOOL_TYPE),
-	(is_selectable,	GBL_GENERIC, (READ, WRITE), GBL_BOOL_TYPE)
+	(isActive,		GBL_GENERIC, (READ, WRITE), GBL_BOOL_TYPE),
+	(isSelectable,	GBL_GENERIC, (READ, WRITE), GBL_BOOL_TYPE)
 )
 
+
+// You can connect to the signals with UI_connect() like so:
+// UI_connect(button, onPressPrimary, myFunction);
 GBL_SIGNALS(UI_Button,
-	(on_press, (GBL_INSTANCE_TYPE, pReceiver))
+	(onPressPrimary, 	(GBL_INSTANCE_TYPE, pReceiver)),
+	(onPressSecondary, 	(GBL_INSTANCE_TYPE, pReceiver)),
+	(onPressTertiary, 	(GBL_INSTANCE_TYPE, pReceiver))
 )
 
 GblType UI_Button_type(void);
 
 // Takes a list of Name/Value pairs
-#define UI_Button_create(/* property_name, property_value */ ...) GBL_NEW(UI_Button __VA_OPT__(,) __VA_ARGS__)
+#define UI_Button_create(/* propertyName, propertyValue */ ...) GBL_NEW(UI_Button __VA_OPT__(,) __VA_ARGS__)
 
 GBL_DECLS_END
 #undef GBL_SELF_TYPE

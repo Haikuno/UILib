@@ -10,7 +10,7 @@ static GBL_RESULT UI_Widget_init_(GblInstance *pInstance) {
 	UI_WIDGET(pInstance)->w = 320;
 	UI_WIDGET(pInstance)->h = 240;
 
-	UI_WIDGET(pInstance)->is_relative = true;
+	UI_WIDGET(pInstance)->isRelative = true;
 
 	UI_WIDGET(pInstance)->r = 0;
 	UI_WIDGET(pInstance)->g = 255;
@@ -21,11 +21,14 @@ static GBL_RESULT UI_Widget_init_(GblInstance *pInstance) {
 	UI_WIDGET(pInstance)->border_g		= 0;
 	UI_WIDGET(pInstance)->border_b		= 0;
 	UI_WIDGET(pInstance)->border_a		= 0;
-	UI_WIDGET(pInstance)->border_width	= 2;
+	UI_WIDGET(pInstance)->border_width	= 4;
+	UI_WIDGET(pInstance)->border_radius	= 0.15f;
 
-	UI_WIDGET(pInstance)->text_alignment = UI_TEXT_ALIGN_CENTER;
+	UI_WIDGET(pInstance)->border_highlight = true;
+
+	UI_WIDGET(pInstance)->textAlignment = UI_TEXT_ALIGN_CENTER;
 	UI_WIDGET(pInstance)->font = nullptr;
-	UI_WIDGET(pInstance)->font_size = 20;
+	UI_WIDGET(pInstance)->font_size = 22;
 	UI_WIDGET(pInstance)->font_r = 255;
 	UI_WIDGET(pInstance)->font_g = 255;
 	UI_WIDGET(pInstance)->font_b = 255;
@@ -57,8 +60,8 @@ static GBL_RESULT UI_Widget_GblObject_setProperty_(GblObject *pObject, const Gbl
 		case UI_Widget_Property_Id_h:
 			GblVariant_valueCopy(pValue, &pSelf->h);
 			break;
-		case UI_Widget_Property_Id_is_relative:
-			GblVariant_valueCopy(pValue, &pSelf->is_relative);
+		case UI_Widget_Property_Id_isRelative:
+			GblVariant_valueCopy(pValue, &pSelf->isRelative);
 			break;
 		case UI_Widget_Property_Id_color:
 			uint32_t color_;
@@ -111,11 +114,17 @@ static GBL_RESULT UI_Widget_GblObject_setProperty_(GblObject *pObject, const Gbl
 		case UI_Widget_Property_Id_border_width:
 			GblVariant_valueCopy(pValue, &pSelf->border_width);
 			break;
+		case UI_Widget_Property_Id_border_radius:
+			GblVariant_valueCopy(pValue, &pSelf->border_radius);
+			break;
+		case UI_Widget_Property_Id_border_highlight:
+			GblVariant_valueCopy(pValue, &pSelf->border_highlight);
+			break;
 		case UI_Widget_Property_Id_label:
 			GblStringBuffer_set(&pSelf->label, GblVariant_toString(pValue));
 			break;
-		case UI_Widget_Property_Id_text_alignment:
-			GblVariant_valueCopy(pValue, &pSelf->text_alignment);
+		case UI_Widget_Property_Id_textAlignment:
+			GblVariant_valueCopy(pValue, &pSelf->textAlignment);
 			break;
 		case UI_Widget_Property_Id_font_size:
 			GblVariant_valueCopy(pValue, &pSelf->font_size);
@@ -176,8 +185,8 @@ static GBL_RESULT UI_Widget_GblObject_property_(const GblObject *pObject, const 
 		case UI_Widget_Property_Id_h:
 			GblVariant_setFloat(pValue, pSelf->h);
 			break;
-		case UI_Widget_Property_Id_is_relative:
-			GblVariant_setBool(pValue, pSelf->is_relative);
+		case UI_Widget_Property_Id_isRelative:
+			GblVariant_setBool(pValue, pSelf->isRelative);
 			break;
 		case UI_Widget_Property_Id_color:
 			GblVariant_setUint32(pValue, pSelf->r << 24 | pSelf->g << 16 | pSelf->b << 8 | pSelf->a);
@@ -215,11 +224,17 @@ static GBL_RESULT UI_Widget_GblObject_property_(const GblObject *pObject, const 
 		case UI_Widget_Property_Id_border_width:
 			GblVariant_setUint8(pValue, pSelf->border_width);
 			break;
+		case UI_Widget_Property_Id_border_radius:
+			GblVariant_setFloat(pValue, pSelf->border_radius);
+			break;
+		case UI_Widget_Property_Id_border_highlight:
+			GblVariant_setUint8(pValue, pSelf->border_highlight);
+			break;
 		case UI_Widget_Property_Id_label:
 			GblVariant_setString(pValue, GblStringBuffer_cString(&pSelf->label));
 			break;
-		case UI_Widget_Property_Id_text_alignment:
-			GblVariant_setEnum(pValue, UI_TEXT_ALIGNMENT_TYPE, pSelf->text_alignment);
+		case UI_Widget_Property_Id_textAlignment:
+			GblVariant_setEnum(pValue, UI_TEXT_ALIGNMENT_TYPE, pSelf->textAlignment);
 			break;
 		case UI_Widget_Property_Id_font_size:
 			GblVariant_setUint8(pValue, pSelf->font_size);
@@ -265,30 +280,42 @@ static GBL_RESULT UI_Widget_GblObject_property_(const GblObject *pObject, const 
 }
 
 static GBL_RESULT UI_Widget_update_(UI_Widget *pSelf) {
-	//
+	return GBL_RESULT_SUCCESS;
 }
 
 static GBL_RESULT UI_Widget_draw_(UI_Widget *pSelf) {
 	Rectangle  rec    = (Rectangle){ pSelf->x, pSelf->y, pSelf->w, pSelf->h };
 	GblObject *parent = GblObject_parent(GBL_OBJECT(pSelf));
 
-	if (parent && GBL_TYPEOF(parent) != UI_ROOT_TYPE && GBL_TYPEOF(parent) != UI_CONTAINER_TYPE && pSelf->is_relative) {
+	if (parent && GBL_TYPEOF(parent) != UI_ROOT_TYPE && GBL_TYPEOF(parent) != UI_CONTAINER_TYPE && pSelf->isRelative) {
 		Vector2 parent_pos	= UI_get_absolute_position_(UI_WIDGET(parent));
 		rec.x				+= parent_pos.x;
 		rec.y				+= parent_pos.y;
 	}
 
 	if (pSelf->a) {
-		DrawRectangleRec(rec, (Color){ pSelf->r, pSelf->g, pSelf->b, pSelf->a });
+		DrawRectangleRounded(rec, 0.15f, 6, (Color){ pSelf->r, pSelf->g, pSelf->b, pSelf->a });
 	}
 
 	if (pSelf->border_a) {
-		DrawRectangleLinesEx(rec, pSelf->border_width, (Color){ pSelf->border_r, pSelf->border_g, pSelf->border_b, pSelf->border_a });
+		DrawRectangleRoundedLinesEx(rec, pSelf->border_radius, 6, pSelf->border_width, (Color){ pSelf->border_r, pSelf->border_g, pSelf->border_b, pSelf->border_a });
+
+		if (pSelf->border_highlight) {
+			float inner_thickness = 1;
+			float inset = (pSelf->border_width - inner_thickness) / 2.0f;
+			Rectangle inner = {
+				rec.x - inset / 2,
+				rec.y - inset / 2,
+				rec.width  + inset,
+				rec.height + inset
+			};
+			DrawRectangleRoundedLinesEx(inner, pSelf->border_radius, 6, inner_thickness, (Color){ 255, 255, 255, 255 });
+		}
 	}
 
 	// text and texture rendering
-	Vector2 text_size	= { 0, 0 };
-	Vector2 text_pos	= { 0, 0 };
+	Vector2 textSize	= { 0, 0 };
+	Vector2 textPos		= { 0, 0 };
 	const float margin	= 3.0f;
 
 	if (GblStringBuffer_length(&pSelf->label)) {
@@ -299,29 +326,29 @@ static GBL_RESULT UI_Widget_draw_(UI_Widget *pSelf) {
 			font = *(pSelf->font);
 		}
 
-		text_size = MeasureTextEx(font, GblStringBuffer_cString(&pSelf->label), pSelf->font_size, 1);
+		textSize = MeasureTextEx(font, GblStringBuffer_cString(&pSelf->label), pSelf->font_size, 1);
 
-		switch (pSelf->text_alignment) {
+		switch (pSelf->textAlignment) {
 			case UI_TEXT_ALIGN_CENTER:
-				text_pos = (Vector2){ rec.x + (rec.width - text_size.x) / 2, rec.y + rec.height / 2 - text_size.y / 2 };
+				textPos = (Vector2){ rec.x + (rec.width - textSize.x) / 2, rec.y + rec.height / 2 - textSize.y / 2 };
 
 				// can't align to the center if there's a texture, so default to bottom
 				if (pSelf->texture) {
-					text_pos = (Vector2){ rec.x + (rec.width - text_size.x) / 2, rec.y + rec.height - text_size.y - margin };
+					textPos = (Vector2){ rec.x + (rec.width - textSize.x) / 2, rec.y + rec.height - textSize.y - margin };
 				}
 
 				break;
 			case UI_TEXT_ALIGN_TOP:
-				text_pos = (Vector2){ rec.x + (rec.width - text_size.x) / 2, rec.y + text_size.y / 2 + margin };
+				textPos = (Vector2){ rec.x + (rec.width - textSize.x) / 2, rec.y + textSize.y / 2 + margin };
 				break;
 			case UI_TEXT_ALIGN_RIGHT:
-				text_pos = (Vector2){ rec.x + rec.width - text_size.x - margin, rec.y + (rec.height - text_size.y) / 2 };
+				textPos = (Vector2){ rec.x + rec.width - textSize.x - margin, rec.y + (rec.height - textSize.y) / 2 };
 				break;
 			case UI_TEXT_ALIGN_BOTTOM:
-				text_pos = (Vector2){ rec.x + (rec.width - text_size.x) / 2, rec.y + rec.height - text_size.y - margin };
+				textPos = (Vector2){ rec.x + (rec.width - textSize.x) / 2, rec.y + rec.height - textSize.y - margin };
 				break;
 			case UI_TEXT_ALIGN_LEFT:
-				text_pos = (Vector2){ rec.x + margin, rec.y + (rec.height - pSelf->font_size) / 2 };
+				textPos = (Vector2){ rec.x + margin, rec.y + (rec.height - pSelf->font_size) / 2 };
 				break;
 		}
 
@@ -334,9 +361,9 @@ static GBL_RESULT UI_Widget_draw_(UI_Widget *pSelf) {
 
 					DrawTextEx(font,
 						GblStringBuffer_cString(&pSelf->label),
-						(Vector2){ text_pos.x + dx, text_pos.y + dy },
+						(Vector2){ textPos.x + dx, textPos.y + dy },
 						pSelf->font_size,
-						1,
+						1.2,
 						(Color){ pSelf->font_border_r, pSelf->font_border_g, pSelf->font_border_b, pSelf->font_border_a });
 				}
 			}
@@ -344,39 +371,52 @@ static GBL_RESULT UI_Widget_draw_(UI_Widget *pSelf) {
 
 		DrawTextEx(font,
 			GblStringBuffer_cString(&pSelf->label),
-			text_pos,
+			textPos,
 			(float)pSelf->font_size,
-			1,
+			1.2,
 			(Color){ pSelf->font_r, pSelf->font_g, pSelf->font_b, pSelf->font_a });
 	}
 
 
 	if (pSelf->texture != nullptr) {
-		Vector2 texture_size	= { (float)pSelf->texture->width, (float)pSelf->texture->height };
-		Vector2 texture_pos		= { rec.x, rec.y };
+		Vector2 textureSize		= { (float)pSelf->texture->width, (float)pSelf->texture->height };
+		Vector2 texturePos		= { rec.x, rec.y };
 
 		// adjust texture size based on pSelf size
-		if (texture_size.x > rec.width) {
-			texture_size.x = rec.width;
-		}
+		textureSize.x = rec.width;
+		textureSize.y = rec.height;
 
-		if (texture_size.y > rec.height) {
-			texture_size.y = rec.height;
+		// if there is text, shrink it
+		if (GblStringBuffer_length(&pSelf->label)) {
+			textureSize.y *= 0.6f;
+			textureSize.x *= 0.6f;
 		}
 
 		// adjust texture position based on text size, position and alignment
-
-		// switch (pSelf->text_alignment) {
-		// 	case UI_TEXT_ALIGN_CENTER:
-		// 	case UI_TEXT_ALIGN_BOTTOM:
-		// }
+		switch (pSelf->textAlignment) {
+			case UI_TEXT_ALIGN_CENTER:
+			case UI_TEXT_ALIGN_BOTTOM:
+				texturePos = (Vector2){ rec.x + (rec.width - textureSize.x) / 2, rec.y + (rec.height - textureSize.y) / 2 - margin - textSize.y / 2 };
+				break;
+			case UI_TEXT_ALIGN_TOP:
+				texturePos = (Vector2){ rec.x + (rec.width - textureSize.x) / 2, rec.y + (rec.height - textureSize.y) / 2 + margin + textSize.y / 2 };
+				break;
+			case UI_TEXT_ALIGN_LEFT:
+				texturePos = (Vector2){ rec.x + (rec.width - textureSize.x) / 2 + margin + textSize.x / 2, rec.y + (rec.height - textureSize.y) / 2 };
+				break;
+			case UI_TEXT_ALIGN_RIGHT:
+				texturePos = (Vector2){ rec.x + (rec.width - textureSize.x) / 2 - margin - textSize.x / 2, rec.y + (rec.height - textureSize.y) / 2 };
+				break;
+		}
 
 
 		Rectangle src = { 0, 0, (float)pSelf->texture->width, (float)pSelf->texture->height };
-		Rectangle dst = { texture_pos.x, texture_pos.y, texture_size.x, texture_size.y };
+		Rectangle dst = { texturePos.x, texturePos.y, textureSize.x, textureSize.y };
 
 		DrawTexturePro(*pSelf->texture, src, dst, (Vector2){ 0, 0 }, 0.0f, (Color){ 255, 255, 255, 255 });
 	}
+
+	return GBL_RESULT_SUCCESS;
 }
 
 static GBL_RESULT UI_WidgetClass_init_(GblClass *pClass, const void *pData) {
@@ -410,6 +450,8 @@ GblType UI_Widget_type(void) {
 													.pFnInstanceInit = UI_Widget_init_ },
 							 GBL_TYPE_FLAG_TYPEINFO_STATIC);
 	}
+
+	return type;
 }
 
 /// General UI widget functions ///
@@ -418,7 +460,7 @@ Vector2 UI_get_absolute_position_(UI_Widget *pWidget) {
 	GblObject	*parent	= GblObject_parent(GBL_OBJECT(pWidget));
 	Vector2		pos		= { pWidget->x, pWidget->y };
 
-	if (!parent || !pWidget->is_relative) {
+	if (!parent || !pWidget->isRelative) {
 		return pos;
 	}
 

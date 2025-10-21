@@ -31,7 +31,7 @@ GblType UI_Controller_type(void);
 
 	Sends it to the parent (usually a UI_Root) for it to handle
 */
-void UI_Controller_notify_button(GBL_SELF, UI_CONTROLLER_BUTTON_STATE state, UI_CONTROLLER_BUTTON button);
+void UI_Controller_notifyButton(GBL_SELF, UI_CONTROLLER_BUTTON_STATE state, UI_CONTROLLER_BUTTON button);
 
 GBL_DECLS_END
 #undef GBL_SELF_TYPE

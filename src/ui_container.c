@@ -2,8 +2,8 @@
 #include "ui_widget.h"
 
 static GBL_RESULT UI_Container_init_(GblInstance *pInstance) {
-    UI_CONTAINER(pInstance)->resize_widgets = true;
-    UI_CONTAINER(pInstance)->align_widgets  = true;
+    UI_CONTAINER(pInstance)->resizeWidgets = true;
+    UI_CONTAINER(pInstance)->alignWidgets  = true;
     UI_CONTAINER(pInstance)->padding        = 5.0f;
     UI_CONTAINER(pInstance)->margin         = 5.0f;
     UI_CONTAINER(pInstance)->orientation    = 'v';
@@ -11,40 +11,44 @@ static GBL_RESULT UI_Container_init_(GblInstance *pInstance) {
 }
 
 static GBL_RESULT UI_Container_update_(UI_Widget *pSelf) {
-    size_t child_count = GblObject_childCount(GBL_OBJECT(pSelf));
-    if (child_count == 0) return GBL_RESULT_SUCCESS;
+    size_t childCount = GblObject_childCount(GBL_OBJECT(pSelf));
+    if (childCount == 0) return GBL_RESULT_SUCCESS;
 
-	const bool 	is_horizontal 				= UI_CONTAINER(pSelf)->orientation == 'h' || UI_CONTAINER(pSelf)->orientation == 'H';
-    const float total_margin  				= UI_CONTAINER(pSelf)->margin * (float)(child_count + 1);
-    const float total_padding 				= UI_CONTAINER(pSelf)->padding * 2.0f;
-	const float container_main_pos 			= is_horizontal ? pSelf->x : pSelf->y;
-	const float container_secondary_pos		= is_horizontal ? pSelf->y : pSelf->x;
-	const float container_main_dim			= is_horizontal ? pSelf->w : pSelf->h;
-	const float container_secondary_dim		= is_horizontal ? pSelf->h : pSelf->w;
-	float offset 							= container_main_pos + UI_CONTAINER(pSelf)->padding;
+	const bool 	isHorizontal 				= UI_CONTAINER(pSelf)->orientation == 'h' || UI_CONTAINER(pSelf)->orientation == 'H';
+    const float totalMargin  				= UI_CONTAINER(pSelf)->margin * (float)(childCount + 1);
+    const float totalPadding 				= UI_CONTAINER(pSelf)->padding * 2.0f;
 
-	for (size_t i = 0; i < child_count; ++i) {
+	const float container_mainPos 			= isHorizontal ? pSelf->x : pSelf->y;
+	const float container_secondaryPos		= isHorizontal ? pSelf->y : pSelf->x;
+	const float container_mainDim			= isHorizontal ? pSelf->w : pSelf->h;
+	const float container_secondaryDim		= isHorizontal ? pSelf->h : pSelf->w;
+
+	float offset 							= container_mainPos + UI_CONTAINER(pSelf)->padding;
+
+	for (size_t i = 0; i < childCount; ++i) {
 		GblObject *child_obj    = GblObject_findChildByIndex(GBL_OBJECT(pSelf), i);
 		UI_Widget *child_widget = UI_WIDGET(child_obj);
 
-		float *widget_main_pos		= is_horizontal ? &child_widget->x : &child_widget->y;
-		float *widget_secondary_pos = is_horizontal ? &child_widget->y : &child_widget->x;
-		float *widget_main_dim		= is_horizontal ? &child_widget->w : &child_widget->h;
-		float *widget_secondary_dim = is_horizontal ? &child_widget->h : &child_widget->w;
+		float *widget_mainPos		= isHorizontal ? &child_widget->x : &child_widget->y;
+		float *widget_secondaryPos  = isHorizontal ? &child_widget->y : &child_widget->x;
+		float *widget_mainDim		= isHorizontal ? &child_widget->w : &child_widget->h;
+		float *widget_secondaryDim  = isHorizontal ? &child_widget->h : &child_widget->w;
 
-		if (UI_CONTAINER(pSelf)->resize_widgets) {
-			*widget_main_dim		= (container_main_dim - total_margin - total_padding) / (float)child_count;
-			*widget_secondary_dim	= container_secondary_dim - total_padding;
+		if (UI_CONTAINER(pSelf)->resizeWidgets) {
+			*widget_mainDim		    = (container_mainDim - totalMargin - totalPadding) / (float)childCount;
+			*widget_secondaryDim	= container_secondaryDim - totalPadding;
 		}
 
-		if (UI_CONTAINER(pSelf)->align_widgets) {
+		if (UI_CONTAINER(pSelf)->alignWidgets) {
 			if (i == 0) offset += UI_CONTAINER(pSelf)->margin;
 
-			*widget_main_pos		= offset;
-			*widget_secondary_pos	= container_secondary_pos + UI_CONTAINER(pSelf)->padding;
-			offset 					+= *widget_main_dim + UI_CONTAINER(pSelf)->margin;
+			*widget_mainPos		    = offset;
+			*widget_secondaryPos	= container_secondaryPos + UI_CONTAINER(pSelf)->padding;
+			offset 					+= *widget_mainDim + UI_CONTAINER(pSelf)->margin;
 		}
 	}
+
+    return GBL_RESULT_SUCCESS;
 }
 
 static GBL_RESULT UI_Container_GblObject_setProperty_(GblObject *pObject, const GblProperty *pProp, GblVariant *pValue) {
@@ -54,11 +58,11 @@ static GBL_RESULT UI_Container_GblObject_setProperty_(GblObject *pObject, const 
         case UI_Container_Property_Id_orientation:
             GblVariant_valueCopy(pValue, &pSelf->orientation);
             break;
-        case UI_Container_Property_Id_resize_widgets:
-            GblVariant_valueCopy(pValue, &pSelf->resize_widgets);
+        case UI_Container_Property_Id_resizeWidgets:
+            GblVariant_valueCopy(pValue, &pSelf->resizeWidgets);
             break;
-        case UI_Container_Property_Id_align_widgets:
-            GblVariant_valueCopy(pValue, &pSelf->align_widgets);
+        case UI_Container_Property_Id_alignWidgets:
+            GblVariant_valueCopy(pValue, &pSelf->alignWidgets);
             break;
         case UI_Container_Property_Id_padding:
             GblVariant_valueCopy(pValue, &pSelf->padding);
@@ -80,11 +84,11 @@ static GBL_RESULT UI_Container_GblObject_property_(const GblObject *pObject, con
         case UI_Container_Property_Id_orientation:
             GblVariant_setChar(pValue, pSelf->orientation);
             break;
-        case UI_Container_Property_Id_resize_widgets:
-            GblVariant_setBool(pValue, pSelf->resize_widgets);
+        case UI_Container_Property_Id_resizeWidgets:
+            GblVariant_setBool(pValue, pSelf->resizeWidgets);
             break;
-        case UI_Container_Property_Id_align_widgets:
-            GblVariant_setBool(pValue, pSelf->align_widgets);
+        case UI_Container_Property_Id_alignWidgets:
+            GblVariant_setBool(pValue, pSelf->alignWidgets);
             break;
         case UI_Container_Property_Id_padding:
             GblVariant_setFloat(pValue, pSelf->padding);

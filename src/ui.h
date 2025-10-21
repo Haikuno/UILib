@@ -21,4 +21,8 @@
 // Also recursively unrefs all of its children.
 #define UI_unref(obj)					(UI_unref_		(GBL_OBJECT(obj)))
 
+// Connects an UI element's (typically a UI_Button) signal to a function.
+// See UI_button.h
+#define UI_connect(obj, signal, func) 	(GBL_CONNECT(obj, signal, func))
+
 #endif // UI_LIB_H

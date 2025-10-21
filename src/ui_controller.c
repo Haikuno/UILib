@@ -10,7 +10,7 @@ static GBL_RESULT UI_Controller_init_(GblInstance *pInstance) {
 	return GBL_RESULT_SUCCESS;
 }
 
-void UI_Controller_notify_button(UI_Controller *pSelf, UI_CONTROLLER_BUTTON_STATE state, UI_CONTROLLER_BUTTON button) {
+void UI_Controller_notifyButton(UI_Controller *pSelf, UI_CONTROLLER_BUTTON_STATE state, UI_CONTROLLER_BUTTON button) {
 	UI_ButtonEvent *pEvent = UI_ButtonEvent_create(pSelf, state, button);
 	GblObject_sendEvent(GBL_OBJECT(pSelf), GBL_EVENT(pEvent));
 }

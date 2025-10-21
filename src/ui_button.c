@@ -1,25 +1,25 @@
 #include "ui_button.h"
 
 static GBL_RESULT UI_Button_init_(GblInstance *pInstance) {
-	UI_BUTTON(pInstance)->is_active		= true;
-	UI_BUTTON(pInstance)->is_selectable	= true;
-	UI_BUTTON(pInstance)->is_selected	= false;
+	UI_BUTTON(pInstance)->isActive		= true;
+	UI_BUTTON(pInstance)->isSelectable	= true;
+	UI_BUTTON(pInstance)->isSelected	= false;
 	return GBL_RESULT_SUCCESS;
 }
 
 static GBL_RESULT UI_Button_draw_(UI_Widget *pSelf) {
 	GBL_CTX_BEGIN(nullptr);
-	if (!UI_BUTTON(pSelf)->is_active) {
+	if (!UI_BUTTON(pSelf)->isActive) {
 		pSelf->a        = GBL_MIN(pSelf->a, 40);
 		pSelf->border_a = GBL_MIN(pSelf->border_a, 40);
 	}
 
-	if (UI_BUTTON(pSelf)->is_selected) {
+	if (UI_BUTTON(pSelf)->isSelected) {
 		pSelf->border_a        = 200;
 		pSelf->border_r        = 255;
 		pSelf->border_g        = 255;
 		pSelf->border_b        = 255;
-		pSelf->border_width	   = 4;
+		pSelf->border_width	   = 2;
 	} else {
 		pSelf->border_a = 0;
 	}
@@ -31,11 +31,11 @@ static GBL_RESULT UI_Button_draw_(UI_Widget *pSelf) {
 static GBL_RESULT UI_Button_GblObject_setProperty_(GblObject *pObject, const GblProperty *pProp, GblVariant *pValue) {
 	UI_Button *pSelf = UI_BUTTON(pObject);
 	switch (pProp->id) {
-		case UI_Button_Property_Id_is_active:
-			GblVariant_valueCopy(pValue, &pSelf->is_active);
+		case UI_Button_Property_Id_isActive:
+			GblVariant_valueCopy(pValue, &pSelf->isActive);
 			break;
-		case UI_Button_Property_Id_is_selectable:
-			GblVariant_valueCopy(pValue, &pSelf->is_selectable);
+		case UI_Button_Property_Id_isSelectable:
+			GblVariant_valueCopy(pValue, &pSelf->isSelectable);
 			break;
 		default:
 			return GBL_RESULT_ERROR_INVALID_PROPERTY;
@@ -48,11 +48,11 @@ static GBL_RESULT UI_Button_GblObject_property_(const GblObject *pObject, const 
 	UI_Button *pSelf = UI_BUTTON(pObject);
 
 	switch (pProp->id) {
-		case UI_Button_Property_Id_is_active:
-			GblVariant_setBool(pValue, pSelf->is_active);
+		case UI_Button_Property_Id_isActive:
+			GblVariant_setBool(pValue, pSelf->isActive);
 			break;
-		case UI_Button_Property_Id_is_selectable:
-			GblVariant_setBool(pValue, pSelf->is_selectable);
+		case UI_Button_Property_Id_isSelectable:
+			GblVariant_setBool(pValue, pSelf->isSelectable);
 			break;
 		default:
 			return GBL_RESULT_ERROR_INVALID_PROPERTY;
@@ -67,7 +67,17 @@ static GBL_RESULT UI_ButtonClass_init_(GblClass *pClass, const void *pData) {
 	if (!GblType_classRefCount(GBL_CLASS_TYPEOF(pClass))) GBL_PROPERTIES_REGISTER(UI_Button);
 
 	GblSignal_install(  UI_BUTTON_TYPE,
-						"on_press",
+						"onPressPrimary",
+						GblMarshal_CClosure_VOID__INSTANCE,
+						0);
+
+	GblSignal_install(  UI_BUTTON_TYPE,
+						"onPressSecondary",
+						GblMarshal_CClosure_VOID__INSTANCE,
+						0);
+
+	GblSignal_install(  UI_BUTTON_TYPE,
+						"onPressTertiary",
 						GblMarshal_CClosure_VOID__INSTANCE,
 						0);
 
