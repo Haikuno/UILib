@@ -57,7 +57,7 @@ static GBL_RESULT UI_Controller_draw_(UI_Widget *pSelf) {
 			.height = UI_WIDGET(pController->pSelectedButton)->h
 		};
 
-		DrawRectangleRoundedLinesEx(rec, pSelf->border_radius, 6, pSelf->border_width, (Color){ pSelf->r, pSelf->g, pSelf->b, pSelf->a });
+		DrawRectangleRoundedLinesEx(rec, pSelf->border_radius, 6, pSelf->border_width * 0.75, (Color){ pSelf->r, pSelf->g, pSelf->b, pSelf->a });
 	}
 
 	return GBL_RESULT_SUCCESS;
@@ -84,7 +84,7 @@ static GBL_RESULT UI_Controller_init_(GblInstance *pInstance) {
 	UI_WIDGET(pInstance)->g 					= 0;
 	UI_WIDGET(pInstance)->b 					= 0;
 	UI_WIDGET(pInstance)->a 					= 255;
-	UI_WIDGET(pInstance)->z_index 				= 255;
+	UI_WIDGET(pInstance)->z_index 				= 200;
 
 	return GBL_RESULT_SUCCESS;
 }

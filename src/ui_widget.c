@@ -1,6 +1,7 @@
 #include "ui_widget.h"
 #include "ui_button.h"
-
+#include "ui_general.h"
+#include "ui_internal.h"
 #include "ui_container.h"
 #include "ui_root.h"
 
@@ -45,7 +46,7 @@ static GBL_RESULT UI_Widget_init_(GblInstance *pInstance) {
 
 	GblStringBuffer_construct(&UI_WIDGET(pInstance)->label);
 
-	UI_drawQueue_push_(GBL_OBJECT(pInstance));
+	UI_drawQueue_push(GBL_OBJECT(pInstance));
 
 	return GBL_RESULT_SUCCESS;
 }
@@ -170,6 +171,10 @@ static GBL_RESULT UI_Widget_GblObject_setProperty_(GblObject *pObject, const Gbl
 		case UI_Widget_Property_Id_texture:
 			GblVariant_valueCopy(pValue, &pSelf->texture);
 			break;
+		case UI_Widget_Property_Id_parent:
+			GblObject *pParent = GblVariant_objectPeek(pValue);
+			GblObject_addChild(pParent, pObject);
+			break;
 		default:
 			return GBL_RESULT_ERROR_INVALID_PROPERTY;
 	}
@@ -282,6 +287,9 @@ static GBL_RESULT UI_Widget_GblObject_property_(const GblObject *pObject, const 
 			break;
 		case UI_Widget_Property_Id_texture:
 			GblVariant_setPointer(pValue, UI_TEXTURE_TYPE, &pSelf->texture);
+			break;
+		case UI_Widget_Property_Id_parent:
+			GblVariant_setPointer(pValue, GBL_OBJECT_TYPE, GblObject_parent(GBL_OBJECT(pSelf)));
 			break;
 		default:
 			return GBL_RESULT_ERROR_INVALID_PROPERTY;

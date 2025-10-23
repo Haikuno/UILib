@@ -33,7 +33,7 @@ GblType UI_Controller_type(void);
 #define UI_Controller_create(...) GBL_NEW(UI_Controller __VA_OPT__(,) __VA_ARGS__)
 
 /*
-	Takes in an UI_Controller instance,
+	Takes in a UI_Controller instance,
 	a button state (UI_CONTROLLER_BUTTON_PRESS or UI_CONTROLLER_BUTTON_RELEASE),
 	and a button (UI_CONTROLLER_UP, UI_CONTROLLER_RIGHT, etc.)
 

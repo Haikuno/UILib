@@ -2,65 +2,12 @@
 
 #include "ui_buttonevent.h"
 #include "ui_controller.h"
+#include "ui_internal.h"
 #include "ui_container.h"
+#include "ui_general.h"
 #include "ui_widget.h"
 
-#include <ctype.h>
-
 #include <gimbal/gimbal_containers.h>
-#include <gimbal/gimbal_algorithms.h>
-
-static GblArrayList UI_drawQueue;
-
-static void UI_drawQueue_init_(void) {
-    printf("init draw queue\n");
-    GblArrayList_construct(&UI_drawQueue, sizeof(GblObject*));
-}
-
-static int UI_zIndex_cmp_(const void *pA, const void *pB) {
-    GblObject *a = *(GblObject**)pA;
-    GblObject *b = *(GblObject**)pB;
-
-    UI_Widget *aWidget = GBL_AS(UI_Widget, a);
-    UI_Widget *bWidget = GBL_AS(UI_Widget, b);
-
-    if (! aWidget || ! bWidget) return 0;
-
-    int res = aWidget->z_index - bWidget->z_index;
-
-    printf("zIndex: %d - %d = %d\n", aWidget->z_index, bWidget->z_index, res);
-
-    return res;
-}
-
-void UI_drawQueue_sort_(void) {
-    gblSortQuick(UI_drawQueue.private_.pData, GblArrayList_size(&UI_drawQueue), sizeof(GblObject*), UI_zIndex_cmp_);
-    printf("sort ok!\n");
-}
-
-void UI_drawQueue_push_(GblObject *pObj) {
-    if (!pObj) return;
-
-    UI_Widget *pWidget = GBL_AS(UI_Widget, pObj);
-    if (!pWidget) return;
-
-    GblArrayList_pushBack(&UI_drawQueue, &pObj);
-
-    UI_drawQueue_sort_();
-}
-
-void UI_drawQueue_remove_(GblObject *pObj) {
-    if (!pObj) return;
-
-    for (size_t i = 0; i < GblArrayList_size(&UI_drawQueue); i++) {
-        if (GblArrayList_at(&UI_drawQueue, i) == pObj) {
-            GblArrayList_erase(&UI_drawQueue, i, 1);
-            return;
-        }
-    }
-
-    UI_drawQueue_sort_();
-}
 
 static size_t GblObject_childIndex(GblObject *pSelf) {
     GblObject *pParent = GblObject_parent(pSelf);
@@ -178,12 +125,6 @@ static UI_Button *move_cursor(GblObject *pSelf, UI_CONTROLLER_BUTTON buttonPress
 
     if (axis == parent_orientation) {
         if (dir == 'p') {
-            if (childIndex == 0) {
-                if (axis == grand_parent_orientation) {
-                    goto MOVE_TO_PREVIOUS_CONTAINER;
-                }
-            }
-
             // move to previous selectable button
             newObject = GblObject_siblingPreviousByType(pSelf, UI_BUTTON_TYPE);
             while (newObject != nullptr) {
@@ -191,21 +132,24 @@ static UI_Button *move_cursor(GblObject *pSelf, UI_CONTROLLER_BUTTON buttonPress
                 if (newButton && newButton->isSelectable) return newButton;
                 newObject = GblObject_siblingPreviousByType(newObject, UI_BUTTON_TYPE);
             }
+
+            if (axis == grand_parent_orientation) {
+                goto MOVE_TO_PREVIOUS_CONTAINER;
+            }
+
         }
 
         if (dir == 'n') {
-            if (childIndex == childCount - 1) {
-                if (axis == grand_parent_orientation) {
-                    goto MOVE_TO_NEXT_CONTAINER;
-                }
-            }
-
             // move to next selectable button
             newObject = GblObject_siblingNextByType(pSelf, UI_BUTTON_TYPE);
             while (newObject != nullptr) {
                 newButton = GBL_AS(UI_Button, newObject);
                 if (newButton && newButton->isSelectable) return newButton;
                 newObject = GblObject_siblingNextByType(newObject, UI_BUTTON_TYPE);
+            }
+
+            if (axis == grand_parent_orientation) {
+                goto MOVE_TO_NEXT_CONTAINER;
             }
         }
     }
@@ -317,7 +261,7 @@ static UI_Button *move_cursor(GblObject *pSelf, UI_CONTROLLER_BUTTON buttonPress
 
                 while (newObject != nullptr) {
                     newObject = GblObject_siblingNextByType(GBL_OBJECT(newObject), UI_BUTTON_TYPE);
-                    if (newObject == nullptr) {
+                    if (newObject == nullptr || !GBL_AS(UI_Button, newObject)->isSelectable) {
                         if (newButton != nullptr && newButton->isSelectable) {
                             return newButton;
                         }
@@ -412,7 +356,7 @@ static GBL_RESULT UI_RootClass_init_(GblClass* pClass, const void* pData) {
     UI_ROOT_CLASS(pClass)->base.GblIEventHandlerImpl.pFnEvent = UI_Root_handle_event_;
 
     if (!GblType_classRefCount(GBL_CLASS_TYPEOF(pClass))) {
-        UI_drawQueue_init_();
+        UI_drawQueue_init();
     }
 
     return GBL_RESULT_SUCCESS;
@@ -429,52 +373,4 @@ GblType UI_Root_type(void) {
     }
 
     return type;
-}
-
-/// General UI functions ///
-
-GBL_RESULT UI_update_(GblObject* pSelf) {
-    size_t childCount = GblObject_childCount(pSelf);
-
-    GblObjectClass* pClass          = GBL_OBJECT_GET_CLASS(pSelf);
-    UI_WidgetClass* pWidgetClass_   = GBL_CLASS_AS(UI_Widget, pClass);
-
-    if (pWidgetClass_ != nullptr) {
-        pWidgetClass_->pFnUpdate(UI_WIDGET(pSelf));
-    }
-
-    for (size_t i = 0; i < childCount; i++) {
-        GblObject* childObj = GblObject_findChildByIndex(pSelf, i);
-        UI_update_(childObj);
-    }
-
-    return GBL_RESULT_SUCCESS;
-}
-
-GBL_RESULT UI_draw(void) {
-
-    size_t queueSize = GblArrayList_size(&UI_drawQueue);
-
-    for (size_t i = 0; i < queueSize; i++) {
-        GblObject **pObj = GblArrayList_at(&UI_drawQueue, i);
-
-        UI_WidgetClass *pWidgetClass = GBL_CLASS_AS(UI_Widget, GBL_OBJECT_GET_CLASS(*pObj));
-
-        pWidgetClass->pFnDraw(UI_WIDGET(*pObj));
-    }
-
-    return GBL_RESULT_SUCCESS;
-}
-
-GBL_RESULT UI_unref_(GblObject* pSelf) {
-    size_t      childCount  = GblObject_childCount(pSelf);
-
-    for (size_t i = childCount; i-- > 0;) {
-        GblObject* childObj = GblObject_findChildByIndex(pSelf, i);
-        if (childObj != nullptr) UI_unref_(childObj);
-    }
-
-    GBL_UNREF(pSelf);
-
-    return GBL_RESULT_SUCCESS;
 }
