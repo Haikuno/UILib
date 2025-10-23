@@ -25,8 +25,13 @@ UI_Root* UI_Root_ref(GBL_SELF);
 
 // general UI functions
 GBL_RESULT	UI_update_(GblObject *pSelf);
-GBL_RESULT	UI_draw_(GblObject *pSelf);
 GBL_RESULT	UI_unref_(GblObject *pSelf);
+GBL_RESULT	UI_draw(void);
+
+// draw queue (MOVE THIS ELSEWHERE!!!!!!!!)
+
+void UI_drawQueue_push_(GblObject *pObj);
+void UI_drawQueue_remove_(GblObject *pObj);
 
 GBL_DECLS_END
 #undef GBL_SELF_TYPE

@@ -41,13 +41,21 @@ static GBL_RESULT UI_Widget_init_(GblInstance *pInstance) {
 
 	UI_WIDGET(pInstance)->texture = nullptr;
 
+	UI_WIDGET(pInstance)->z_index = 0;
+
 	GblStringBuffer_construct(&UI_WIDGET(pInstance)->label);
+
+	UI_drawQueue_push_(GBL_OBJECT(pInstance));
+
 	return GBL_RESULT_SUCCESS;
 }
 
 static GBL_RESULT UI_Widget_GblObject_setProperty_(GblObject *pObject, const GblProperty *pProp, GblVariant *pValue) {
 	UI_Widget *pSelf = UI_WIDGET(pObject);
 	switch (pProp->id) {
+		case UI_Widget_Property_Id_z_index:
+			GblVariant_valueCopy(pValue, &pSelf->z_index);
+			break;
 		case UI_Widget_Property_Id_x:
 			GblVariant_valueCopy(pValue, &pSelf->x);
 			break;
@@ -173,6 +181,9 @@ static GBL_RESULT UI_Widget_GblObject_property_(const GblObject *pObject, const 
 	UI_Widget *pSelf = UI_WIDGET(pObject);
 
 	switch (pProp->id) {
+		case UI_Widget_Property_Id_z_index:
+			GblVariant_setUint8(pValue, pSelf->z_index);
+			break;
 		case UI_Widget_Property_Id_x:
 			GblVariant_setFloat(pValue, pSelf->x);
 			break;
@@ -297,7 +308,11 @@ static GBL_RESULT UI_Widget_draw_(UI_Widget *pSelf) {
 		DrawRectangleRounded(rec, 0.15f, 6, (Color){ pSelf->r, pSelf->g, pSelf->b, pSelf->a });
 	}
 
-	if (pSelf->border_a) {
+	UI_Button *pButton = GBL_AS(UI_Button, pSelf);
+
+	bool isSelected = pButton && pButton->isSelected;
+
+	if (pSelf->border_a && !isSelected) {
 		DrawRectangleRoundedLinesEx(rec, pSelf->border_radius, 6, pSelf->border_width, (Color){ pSelf->border_r, pSelf->border_g, pSelf->border_b, pSelf->border_a });
 
 		if (pSelf->border_highlight) {

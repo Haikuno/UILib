@@ -41,7 +41,7 @@ GBL_INSTANCE_DERIVE(UI_Widget, GblObject)
 	uint8_t				font_r, font_g, font_b, font_a;                         				// font color values
 	uint8_t				font_border_r, font_border_g, font_border_b, font_border_a; 			// font border color values (set border_a to 0 for no border)
 	uint8_t				font_border_thickness;													// font border thickness
-
+	uint8_t				z_index;																// z-index for rendering order
 GBL_INSTANCE_END
 
 GBL_PROPERTIES(UI_Widget,
@@ -77,7 +77,9 @@ GBL_PROPERTIES(UI_Widget,
 	(font_border_g,			GBL_GENERIC, (READ, WRITE), GBL_UINT8_TYPE),
 	(font_border_b,			GBL_GENERIC, (READ, WRITE), GBL_UINT8_TYPE),
 	(font_border_a,			GBL_GENERIC, (READ, WRITE), GBL_UINT8_TYPE),
-	(font_border_thickness, GBL_GENERIC, (READ, WRITE), GBL_UINT8_TYPE)
+	(font_border_thickness, GBL_GENERIC, (READ, WRITE), GBL_UINT8_TYPE),
+	(z_index,				GBL_GENERIC, (READ, WRITE), GBL_UINT8_TYPE),
+	(parent,				GBL_GENERIC, (READ, WRITE), GBL_OBJECT_TYPE)
 )
 
 GblType UI_Widget_type(void);

@@ -14,11 +14,19 @@
 GBL_FORWARD_DECLARE_STRUCT(UI_Controller);
 GBL_DECLS_BEGIN
 
-GBL_CLASS_DERIVE_EMPTY(UI_Controller, GblObject)
+GBL_CLASS_DERIVE_EMPTY(UI_Controller, UI_Widget)
 
-GBL_INSTANCE_DERIVE(UI_Controller, GblObject)
-	UI_Button* pSelectedButton;
+GBL_INSTANCE_DERIVE(UI_Controller, UI_Widget)
+	UI_Button* 	pSelectedButton;
+	uint8_t		controllerId;	 // To know which controller is currently selected
+	bool		isKeyboard;
 GBL_INSTANCE_END
+
+GBL_PROPERTIES(UI_Controller,
+	(controllerId,		GBL_GENERIC, (READ, WRITE), GBL_UINT8_TYPE),
+	(isKeyboard,		GBL_GENERIC, (READ, WRITE), GBL_BOOL_TYPE)
+)
+
 
 GblType UI_Controller_type(void);
 

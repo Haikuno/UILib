@@ -15,15 +15,19 @@ GBL_DECLS_BEGIN
 
 GBL_CLASS_DERIVE_EMPTY(UI_Button, UI_Widget)
 
+// TODO: flags
 GBL_INSTANCE_DERIVE(UI_Button, UI_Widget)
-	bool isActive;
-	bool isSelectable;
-	bool isSelected;
+	bool 			isActive;				// if this button can be pressed
+	bool 			isSelectable;			// if this button can be selected
+	bool 			isSelected;				// if this button is currently selected
+	bool 			isSelectedByDefault;	// if this button is selected by default
+	GblArrayList
 GBL_INSTANCE_END
 
 GBL_PROPERTIES(UI_Button,
-	(isActive,		GBL_GENERIC, (READ, WRITE), GBL_BOOL_TYPE),
-	(isSelectable,	GBL_GENERIC, (READ, WRITE), GBL_BOOL_TYPE)
+	(isActive,				GBL_GENERIC, (READ, WRITE), GBL_BOOL_TYPE),
+	(isSelectable,			GBL_GENERIC, (READ, WRITE), GBL_BOOL_TYPE),
+	(isSelectedByDefault,	GBL_GENERIC, (READ, WRITE), GBL_BOOL_TYPE)
 )
 
 

@@ -8,6 +8,59 @@
 #include <ctype.h>
 
 #include <gimbal/gimbal_containers.h>
+#include <gimbal/gimbal_algorithms.h>
+
+static GblArrayList UI_drawQueue;
+
+static void UI_drawQueue_init_(void) {
+    printf("init draw queue\n");
+    GblArrayList_construct(&UI_drawQueue, sizeof(GblObject*));
+}
+
+static int UI_zIndex_cmp_(const void *pA, const void *pB) {
+    GblObject *a = *(GblObject**)pA;
+    GblObject *b = *(GblObject**)pB;
+
+    UI_Widget *aWidget = GBL_AS(UI_Widget, a);
+    UI_Widget *bWidget = GBL_AS(UI_Widget, b);
+
+    if (! aWidget || ! bWidget) return 0;
+
+    int res = aWidget->z_index - bWidget->z_index;
+
+    printf("zIndex: %d - %d = %d\n", aWidget->z_index, bWidget->z_index, res);
+
+    return res;
+}
+
+void UI_drawQueue_sort_(void) {
+    gblSortQuick(UI_drawQueue.private_.pData, GblArrayList_size(&UI_drawQueue), sizeof(GblObject*), UI_zIndex_cmp_);
+    printf("sort ok!\n");
+}
+
+void UI_drawQueue_push_(GblObject *pObj) {
+    if (!pObj) return;
+
+    UI_Widget *pWidget = GBL_AS(UI_Widget, pObj);
+    if (!pWidget) return;
+
+    GblArrayList_pushBack(&UI_drawQueue, &pObj);
+
+    UI_drawQueue_sort_();
+}
+
+void UI_drawQueue_remove_(GblObject *pObj) {
+    if (!pObj) return;
+
+    for (size_t i = 0; i < GblArrayList_size(&UI_drawQueue); i++) {
+        if (GblArrayList_at(&UI_drawQueue, i) == pObj) {
+            GblArrayList_erase(&UI_drawQueue, i, 1);
+            return;
+        }
+    }
+
+    UI_drawQueue_sort_();
+}
 
 static size_t GblObject_childIndex(GblObject *pSelf) {
     GblObject *pParent = GblObject_parent(pSelf);
@@ -300,6 +353,7 @@ static GBL_RESULT UI_Root_handle_event_(GblIEventHandler* pSelf, GblEvent* pEven
 
     UI_ButtonEvent	*buttonEvent	= (UI_ButtonEvent*)pEvent;
     UI_Controller	*pController	= UI_CONTROLLER(GblBox_userdata(GBL_BOX(pEvent)));
+
     UI_Button		**pPButton		= &pController->pSelectedButton;
 
     const bool isDirection         =    buttonEvent->button == UI_CONTROLLER_UP   ||
@@ -331,6 +385,10 @@ static GBL_RESULT UI_Root_handle_event_(GblIEventHandler* pSelf, GblEvent* pEven
     }
 
     if (*pPButton != nullptr && isPress && !isDirection) {
+        if (pController->isKeyboard) printf("keyboard ");
+        else printf("controller ");
+        printf("with id %i pressed button %s!\n", pController->controllerId, GblStringBuffer_cString(&UI_WIDGET((*pPButton))->label));
+
         switch (buttonEvent->button) {
             case UI_CONTROLLER_PRIMARY:
                 GBL_EMIT(*pPButton, "onPressPrimary");
@@ -352,6 +410,11 @@ static GBL_RESULT UI_Root_handle_event_(GblIEventHandler* pSelf, GblEvent* pEven
 static GBL_RESULT UI_RootClass_init_(GblClass* pClass, const void* pData) {
     GBL_UNUSED(pData);
     UI_ROOT_CLASS(pClass)->base.GblIEventHandlerImpl.pFnEvent = UI_Root_handle_event_;
+
+    if (!GblType_classRefCount(GBL_CLASS_TYPEOF(pClass))) {
+        UI_drawQueue_init_();
+    }
+
     return GBL_RESULT_SUCCESS;
 }
 
@@ -388,19 +451,16 @@ GBL_RESULT UI_update_(GblObject* pSelf) {
     return GBL_RESULT_SUCCESS;
 }
 
-GBL_RESULT UI_draw_(GblObject* pSelf) {
-    size_t childCount = GblObject_childCount(pSelf);
+GBL_RESULT UI_draw(void) {
 
-    GblObjectClass* pClass  = GBL_OBJECT_GET_CLASS(pSelf);
-    UI_WidgetClass* pWidgetClass_ = GBL_CLASS_AS(UI_Widget, pClass);
+    size_t queueSize = GblArrayList_size(&UI_drawQueue);
 
-    if (pWidgetClass_ != nullptr) {
-        pWidgetClass_->pFnDraw(UI_WIDGET(pSelf));
-    }
+    for (size_t i = 0; i < queueSize; i++) {
+        GblObject **pObj = GblArrayList_at(&UI_drawQueue, i);
 
-    for (size_t i = 0; i < childCount; i++) {
-        GblObject* childObj = GblObject_findChildByIndex(pSelf, i);
-        UI_draw_(childObj);
+        UI_WidgetClass *pWidgetClass = GBL_CLASS_AS(UI_Widget, GBL_OBJECT_GET_CLASS(*pObj));
+
+        pWidgetClass->pFnDraw(UI_WIDGET(*pObj));
     }
 
     return GBL_RESULT_SUCCESS;
