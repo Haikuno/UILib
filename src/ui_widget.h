@@ -12,7 +12,7 @@
 #define UI_WIDGET_TYPE				(GBL_TYPEID(UI_Widget))
 #define UI_WIDGET(self)				(GBL_CAST(UI_Widget, self))
 #define UI_WIDGET_CLASS(klass)		(GBL_CLASS_CAST(UI_Widget, klass))
-#define UI_WIDGET_GET_CLASS(self)	(GBL_CLASSOF(UI_Widget, self))
+#define UI_WIDGET_CLASSOF(self)		(GBL_CLASSOF(UI_Widget, self))
 
 #define GBL_SELF_TYPE UI_Widget
 

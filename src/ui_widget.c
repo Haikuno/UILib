@@ -446,7 +446,7 @@ static GBL_RESULT UI_WidgetClass_init_(GblClass *pClass, const void *pData) {
 	GBL_UNUSED(pData);
 
 	// Check if this is the first instance of the class
-	if (!GblType_classRefCount(GBL_CLASS_TYPEOF(pClass))) GBL_PROPERTIES_REGISTER(UI_Widget);
+	if (!GblType_classRefCount(UI_WIDGET_TYPE)) GBL_PROPERTIES_REGISTER(UI_Widget);
 
 	GBL_OBJECT_CLASS(pClass)->pFnSetProperty = UI_Widget_GblObject_setProperty_;
 	GBL_OBJECT_CLASS(pClass)->pFnProperty    = UI_Widget_GblObject_property_;

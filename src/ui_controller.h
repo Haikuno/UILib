@@ -7,7 +7,7 @@
 #define UI_CONTROLLER_TYPE					(GBL_TYPEID(UI_Controller))
 #define UI_CONTROLLER(self)					(GBL_CAST(UI_Controller, self))
 #define UI_CONTROLLER_CLASS(klass)			(GBL_CLASS_CAST(UI_Controller, klass))
-#define UI_CONTROLLER_GET_CLASS(self)		(GBL_CLASSOF(UI_Controller, self))
+#define UI_CONTROLLER_CLASSOF(self)			(GBL_CLASSOF(UI_Controller, self))
 
 #define GBL_SELF_TYPE UI_Controller
 
@@ -33,13 +33,16 @@ GblType UI_Controller_type(void);
 #define UI_Controller_create(...) GBL_NEW(UI_Controller __VA_OPT__(,) __VA_ARGS__)
 
 /*
-	Takes in a UI_Controller instance,
+	Takes in a UI_Controller,
 	a button state (UI_CONTROLLER_BUTTON_PRESS or UI_CONTROLLER_BUTTON_RELEASE),
 	and a button (UI_CONTROLLER_UP, UI_CONTROLLER_RIGHT, etc.)
 
 	Sends it to the parent (usually a UI_Root) for it to handle
 */
 void UI_Controller_notifyButton(GBL_SELF, UI_CONTROLLER_BUTTON_STATE state, UI_CONTROLLER_BUTTON button);
+
+// Takes in a UI_Controller, and sets its selected button to the passed UI_Button
+void UI_Controller_setSelectedButton(GBL_SELF, UI_Button* pButton);
 
 GBL_DECLS_END
 #undef GBL_SELF_TYPE

@@ -100,7 +100,7 @@ static GBL_RESULT UI_ButtonClass_init_(GblClass *pClass, const void *pData) {
 static GBL_RESULT UI_ButtonClass_final_(GblClass* pClass, const void* pClassData) {
     GBL_UNUSED(pClassData);
 
-    if(!GblType_classRefCount(GBL_CLASS_TYPEOF(pClass))) {
+    if(!GblType_classRefCount(UI_BUTTON_TYPE)) {
         GblSignal_uninstall(UI_BUTTON_TYPE, "onPressPrimary");
 		GblSignal_uninstall(UI_BUTTON_TYPE, "onPressSecondary");
 		GblSignal_uninstall(UI_BUTTON_TYPE, "onPressTertiary");

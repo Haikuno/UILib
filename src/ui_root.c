@@ -9,287 +9,121 @@
 
 #include <gimbal/gimbal_containers.h>
 
-static size_t GblObject_childIndex(GblObject *pSelf) {
-    GblObject *pParent = GblObject_parent(pSelf);
-    if (!pParent) return 0;
-
-    size_t childCount = GblObject_childCount(pParent);
-    for (size_t i = 0; i < childCount; i++) {
-        GblObject *childObj = GblObject_findChildByIndex(pParent, i);
-        if (childObj == pSelf) {
-            return i;
-        }
-    }
-
-    return 0;
-}
-
-static GblObject *GblObject_siblingPrevious(GblObject *pSelf) {
-    GblObject *pParent = GblObject_parent(pSelf);
-    if(!pParent) return nullptr;
-
-    size_t childCount = GblObject_childCount(pParent);
-    for (size_t i = 0; i < childCount; i++) {
-        GblObject *childObj = GblObject_findChildByIndex(pParent, i);
-        if (childObj == pSelf && i != 0) {
-            return GblObject_findChildByIndex(pParent, i - 1);
-        }
-    }
-
-    return nullptr;
-}
-
-static GblObject *GblObject_siblingPreviousByType(GblObject *pSelf, GblType type) {
-    do pSelf = GblObject_siblingPrevious(pSelf);
-    while (pSelf != nullptr && GBL_TYPEOF(pSelf) != type);
-    return pSelf;
-}
-
-static GblObject *GblObject_siblingNextByType(GblObject *pSelf, GblType type) {
-    do pSelf = GblObject_siblingNext(pSelf);
-    while (pSelf != nullptr && GBL_TYPEOF(pSelf) != type);
-    return pSelf;
-}
-
 static GblObject *GblObject_findDescendantByType(GblObject *pSelf, GblType descendantType) {
+    if (!pSelf) return nullptr;
+
     GblArrayDeque queue;
-    GblArrayDeque_construct(&queue, sizeof(GblObject*), 16, 0, nullptr, GBL_NULL);
+    GblArrayDeque_construct(&queue, sizeof(GblObject*), 8);
     GblArrayDeque_pushBack(&queue, &pSelf);
 
-    GblArrayList visited;
-    GblArrayList_construct(&visited, sizeof(GblObject*));
-
-
     while (GblArrayDeque_size(&queue)) {
-        GblObject **pObj = GblArrayDeque_popFront(&queue);
-
-        size_t childCount = GblObject_childCount(*pObj);
+        GblObject **ppObj = GblArrayDeque_popFront(&queue);
+        size_t childCount = GblObject_childCount(*ppObj);
 
         for (size_t i = 0; i < childCount; i++) {
-            GblObject *childObj = GblObject_findChildByIndex(*pObj, i);
-
-            for (size_t j = 0; j < GblArrayList_size(&visited); j++) {
-                GblObject **pVisited = GblArrayList_at(&visited, j);
-                if (*pVisited == childObj) {
-                    continue;
-                }
-            }
-
+            GblObject *childObj = GblObject_findChildByIndex(*ppObj, i);
             if (GBL_TYPEOF(childObj) == descendantType) {
+                GblArrayDeque_destruct(&queue);
                 return childObj;
             }
-
             GblArrayDeque_pushBack(&queue, &childObj);
-            GblArrayList_pushBack(&visited, &childObj);
         }
     }
 
+    GblArrayDeque_destruct(&queue);
     return nullptr;
 }
 
-// TODO: unreest! don't use chars, use enums
-static UI_Button *move_cursor(GblObject *pSelf, UI_CONTROLLER_BUTTON buttonPress) {
-    UI_Button *newButton = nullptr;
-    GblObject *newObject = nullptr;
+static UI_Button* findSelectableSibling(GblObject* pObj, bool next) {
+    GblObject* sibling = next  ? GblObject_siblingNextByType(pObj, UI_BUTTON_TYPE)
+                               : GblObject_siblingPreviousByType(pObj, UI_BUTTON_TYPE);
+    while (sibling) {
+        UI_Button* button = GBL_AS(UI_Button, sibling);
+        if (button && button->isSelectable) return button;
+        sibling = next ? GblObject_siblingNextByType(sibling, UI_BUTTON_TYPE)
+                       : GblObject_siblingPreviousByType(sibling, UI_BUTTON_TYPE);
+    }
+    return nullptr;
+}
 
-    GblObject *pParent = GblObject_parent(pSelf);
-    if (pParent == nullptr || !GBL_AS(UI_Container, pParent)) return nullptr; // moving cursor around without a parent container is not supported yet!}
-    const char parent_orientation = tolower(GBL_AS(UI_Container, pParent)->orientation);
+static GblObject* findSiblingContainerWithButton(GblObject* pContainer, bool next) {
+    GblObject* sibling = next  ? GblObject_siblingNextByType(pContainer, UI_CONTAINER_TYPE)
+                               : GblObject_siblingPreviousByType(pContainer, UI_CONTAINER_TYPE);
+    while (sibling) {
+        if (GblObject_findDescendantByType(sibling, UI_BUTTON_TYPE)) return sibling;
+        sibling = next ? GblObject_siblingNextByType(sibling, UI_CONTAINER_TYPE)
+                       : GblObject_siblingPreviousByType(sibling, UI_CONTAINER_TYPE);
+    }
+    return nullptr;
+}
 
-    GblObject *pGrandParent = GblObject_parent(pParent);
-    char grand_parent_orientation = 'N';
-    if (GBL_AS(UI_Container, pGrandParent)) {
-        grand_parent_orientation = tolower(GBL_AS(UI_Container, pGrandParent)->orientation);
+static UI_Button* findSelectableInContainer(GblObject* pContainer, bool last, size_t preferredIndex) {
+    GblObject* obj = GblObject_findDescendantByType(pContainer, UI_BUTTON_TYPE);
+    if (!obj) return nullptr;
+
+    UI_Button* candidate = nullptr;
+    size_t index = 0;
+
+    while (obj) {
+        UI_Button* button = GBL_AS(UI_Button, obj);
+        if (button && button->isSelectable) {
+            if (preferredIndex != GBL_INDEX_INVALID && index == preferredIndex) return button;
+            candidate = button;
+        }
+        obj = GblObject_siblingNextByType(obj, UI_BUTTON_TYPE);
+        index++;
     }
 
-    size_t childCount = GblObject_childCount(pParent);
+    // If no preferred index match, return first (if !last) or last (if last) selectable
+    if (last && candidate) return candidate;
+    if (!last) {
+        obj = GblObject_findDescendantByType(pContainer, UI_BUTTON_TYPE);
+        while (obj) {
+            UI_Button* button = GBL_AS(UI_Button, obj);
+            if (button && button->isSelectable) return button;
+            obj = GblObject_siblingNextByType(obj, UI_BUTTON_TYPE);
+        }
+    }
+    return nullptr;
+}
+
+static UI_Button* moveCursor(GblObject* pSelf, UI_CONTROLLER_BUTTON buttonPress) {
+    GblObject* pParent = GblObject_parent(pSelf);
+    if (!pParent || !GBL_AS(UI_Container, pParent)) return nullptr;
+
+    char parent_orientation = tolower(GBL_AS(UI_Container, pParent)->orientation);
+    GblObject* pGrandParent = GblObject_parent(pParent);
+    char grand_parent_orientation = (pGrandParent && GBL_AS(UI_Container, pGrandParent)) ?
+                                    tolower(GBL_AS(UI_Container, pGrandParent)->orientation) : 'N';
+
+    char axis = (buttonPress == UI_CONTROLLER_LEFT  || buttonPress == UI_CONTROLLER_RIGHT) ? 'h' : 'v';
+    bool next = (buttonPress == UI_CONTROLLER_RIGHT || buttonPress == UI_CONTROLLER_DOWN);
+
+    if (axis != parent_orientation && axis != grand_parent_orientation) return nullptr;
+
     size_t childIndex = GblObject_childIndex(pSelf);
 
-    const char axis = buttonPress == UI_CONTROLLER_LEFT || buttonPress == UI_CONTROLLER_RIGHT ? 'h' : 'v'; // HORIZONTAL / VERTICAL
-    const char dir  = buttonPress == UI_CONTROLLER_LEFT || buttonPress == UI_CONTROLLER_UP ? 'p' : 'n';    // PREVIOUS / NEXT
-
-
-    if (axis != parent_orientation) {
-        if (axis != grand_parent_orientation) {
-            return nullptr;
-        }
-
-        if (dir == 'p') {
-           goto MOVE_TO_PREVIOUS_CONTAINER;
-        }
-
-        if (dir == 'n') {
-            goto MOVE_TO_NEXT_CONTAINER;
-        }
-    }
-
+    // Intra-container movement if axis matches parent
     if (axis == parent_orientation) {
-        if (dir == 'p') {
-            // move to previous selectable button
-            newObject = GblObject_siblingPreviousByType(pSelf, UI_BUTTON_TYPE);
-            while (newObject != nullptr) {
-                newButton = GBL_AS(UI_Button, newObject);
-                if (newButton && newButton->isSelectable) return newButton;
-                newObject = GblObject_siblingPreviousByType(newObject, UI_BUTTON_TYPE);
-            }
+        UI_Button* sibling = findSelectableSibling(pSelf, next);
+        if (sibling) return sibling;
 
-            if (axis == grand_parent_orientation) {
-                goto MOVE_TO_PREVIOUS_CONTAINER;
-            }
-
-        }
-
-        if (dir == 'n') {
-            // move to next selectable button
-            newObject = GblObject_siblingNextByType(pSelf, UI_BUTTON_TYPE);
-            while (newObject != nullptr) {
-                newButton = GBL_AS(UI_Button, newObject);
-                if (newButton && newButton->isSelectable) return newButton;
-                newObject = GblObject_siblingNextByType(newObject, UI_BUTTON_TYPE);
-            }
-
-            if (axis == grand_parent_orientation) {
-                goto MOVE_TO_NEXT_CONTAINER;
-            }
-        }
+        // If axis doesn't match grandparent, inter-container movement is not possible
+        if (axis != grand_parent_orientation) return nullptr;
     }
 
-    return nullptr;
+    // Inter-container movement
+    GblObject* pNewContainer = findSiblingContainerWithButton(pParent, next);
+    if (!pNewContainer) return nullptr;
 
-    GblObject *pNewContainer    = nullptr;
-    GblObject *buttonCheck      = nullptr;
+    char new_orientation = tolower(GBL_AS(UI_Container, pNewContainer)->orientation);
+    size_t preferredIndex = (new_orientation == parent_orientation && GblObject_childCount(pNewContainer) > childIndex)
+                            ? childIndex : GBL_INDEX_INVALID;
 
-    MOVE_TO_PREVIOUS_CONTAINER:
-        pNewContainer = GblObject_siblingPreviousByType(pParent, UI_CONTAINER_TYPE);
-        if (!pNewContainer) return nullptr;
-
-        buttonCheck = GblObject_findDescendantByType(pNewContainer, UI_BUTTON_TYPE);
-
-        while (buttonCheck == nullptr) {
-            pNewContainer = GblObject_siblingPreviousByType(pNewContainer, UI_CONTAINER_TYPE);
-            if (!pNewContainer) return nullptr;
-            buttonCheck = GblObject_findDescendantByType(pNewContainer, UI_BUTTON_TYPE);
-        }
-
-        goto GET_BUTTON_FROM_NEW_CONTAINER;
-
-    MOVE_TO_NEXT_CONTAINER:
-        pNewContainer = GblObject_siblingNextByType(pParent, UI_CONTAINER_TYPE);
-        if (!pNewContainer) return nullptr;
-
-        buttonCheck = GblObject_findDescendantByType(pNewContainer, UI_BUTTON_TYPE);
-
-        while (buttonCheck == nullptr) {
-            pNewContainer = GblObject_siblingNextByType(pNewContainer, UI_CONTAINER_TYPE);
-            if (!pNewContainer) return nullptr;
-            buttonCheck = GblObject_findDescendantByType(pNewContainer, UI_BUTTON_TYPE);
-        }
-
-        goto GET_BUTTON_FROM_NEW_CONTAINER;
-
-    GET_BUTTON_FROM_NEW_CONTAINER:
-        if (parent_orientation == grand_parent_orientation) {
-            if (dir == 'p') {
-                // we move to the last button in the new container
-                newObject = GblObject_findDescendantByType(pNewContainer, UI_BUTTON_TYPE);
-                newButton = GBL_AS(UI_Button, newObject);
-
-                while (newObject != nullptr) {
-                    newObject = GblObject_siblingNextByType(GBL_OBJECT(newObject), UI_BUTTON_TYPE);
-                    if (newObject == nullptr) {
-                        if (newButton != nullptr && newButton->isSelectable) {
-                            return newButton;
-                        }
-                        return nullptr;
-                    }
-
-                    newButton = GBL_AS(UI_Button, newObject);
-                }
-                return nullptr;
-            }
-
-            if (dir == 'n') {
-                // we move to the first button in the new container
-                newObject = GblObject_findDescendantByType(pNewContainer, UI_BUTTON_TYPE);
-                while (newObject != nullptr) {
-                    newButton = GBL_AS(UI_Button, newObject);
-                    if (newButton && newButton->isSelectable) return newButton;
-                    newObject = GblObject_siblingNextByType(newObject, UI_BUTTON_TYPE);
-                }
-                return nullptr;
-            }
-        }
-
-        if (parent_orientation != grand_parent_orientation) {
-
-            if (UI_CONTAINER(pNewContainer)->orientation == parent_orientation) {
-                // if the new container has enough buttons, we try to move to the same index
-                if (GblObject_childCount(pNewContainer) > childIndex) {
-                    newButton = GBL_AS(UI_Button, GblObject_findChildByIndex(pNewContainer, childIndex));
-
-                    // if the new button is selectable, we move to it
-                    if (newButton != nullptr && newButton->isSelectable) {
-                        return newButton;
-                    }
-
-                    // otherwise, we move to the first previous selectable button in the new container
-                    newObject = GblObject_siblingPreviousByType(GBL_OBJECT(newButton), UI_BUTTON_TYPE);
-                    while (newObject != nullptr) {
-                        newButton = GBL_AS(UI_Button, GblObject_siblingPreviousByType(GBL_OBJECT(newButton), UI_BUTTON_TYPE));
-                        if (newButton != nullptr && newButton->isSelectable) {
-                            return newButton;
-                        }
-                    }
-
-                    // otherwise, we move to the first next selectable button in the new container
-                    newObject = GblObject_siblingNextByType(GBL_OBJECT(newButton), UI_BUTTON_TYPE);
-                    while (newObject != nullptr) {
-                        newButton = GBL_AS(UI_Button, newObject);
-                        if (newButton != nullptr && newButton->isSelectable) {
-                            return newButton;
-                        }
-                    }
-
-                    return nullptr;
-                }
-            }
-
-            if(dir == 'p') {
-                // we move to the last selectable button in the new container
-                newObject = GblObject_findDescendantByType(pNewContainer, UI_BUTTON_TYPE);
-                newButton = GBL_AS(UI_Button, newObject);
-
-                while (newObject != nullptr) {
-                    newObject = GblObject_siblingNextByType(GBL_OBJECT(newObject), UI_BUTTON_TYPE);
-                    if (newObject == nullptr || !GBL_AS(UI_Button, newObject)->isSelectable) {
-                        if (newButton != nullptr && newButton->isSelectable) {
-                            return newButton;
-                        }
-                        return nullptr;
-                    }
-
-                    newButton = GBL_AS(UI_Button, newObject);
-                }
-                return nullptr;
-            }
-
-            if (dir == 'n') {
-                // we move to the first selectable button in the new container
-                newObject = GblObject_findDescendantByType(pNewContainer, UI_BUTTON_TYPE);
-                while (newObject != nullptr) {
-                    newButton = GBL_AS(UI_Button, newObject);
-                    if (newButton && newButton->isSelectable) return newButton;
-                    newObject = GblObject_siblingNextByType(newObject, UI_BUTTON_TYPE);
-                }
-                return nullptr;
-            }
-
-
-        }
-
-        return nullptr;
-
-    return nullptr;
+    // If orientations match at parent/grandparent level, use first/last, else try preferred index or fallback
+    bool useLast = !next;
+    if (parent_orientation == grand_parent_orientation) useLast = !next;
+    return findSelectableInContainer(pNewContainer, useLast, preferredIndex);
 }
 
 static GBL_RESULT UI_Root_handle_event_(GblIEventHandler* pSelf, GblEvent* pEvent) {
@@ -319,7 +153,7 @@ static GBL_RESULT UI_Root_handle_event_(GblIEventHandler* pSelf, GblEvent* pEven
             return GBL_RESULT_SUCCESS;
         }
 
-        newButton = move_cursor(GBL_OBJECT(*pPButton), buttonEvent->button);
+        newButton = moveCursor(GBL_OBJECT(*pPButton), buttonEvent->button);
 
         if (newButton != nullptr) {
             (*pPButton)->isSelected = false;
@@ -355,7 +189,7 @@ static GBL_RESULT UI_RootClass_init_(GblClass* pClass, const void* pData) {
     GBL_UNUSED(pData);
     UI_ROOT_CLASS(pClass)->base.GblIEventHandlerImpl.pFnEvent = UI_Root_handle_event_;
 
-    if (!GblType_classRefCount(GBL_CLASS_TYPEOF(pClass))) {
+    if (!GblType_classRefCount(UI_ROOT_TYPE)) {
         UI_drawQueue_init();
     }
 

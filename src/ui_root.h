@@ -6,7 +6,7 @@
 #define UI_ROOT_TYPE				(GBL_TYPEID(UI_Root))
 #define UI_ROOT(self)				(GBL_CAST(UI_Root, self))
 #define UI_ROOT_CLASS(klass)		(GBL_CLASS_CAST(UI_Root, klass))
-#define UI_ROOT_GET_CLASS(self)		(GBL_CLASSOF(UI_Root, self))
+#define UI_ROOT_CLASSOF(self)		(GBL_CLASSOF(UI_Root, self))
 
 #define GBL_SELF_TYPE UI_Root
 

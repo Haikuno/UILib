@@ -6,7 +6,7 @@
 #define UI_CONTAINER_TYPE				(GBL_TYPEID(UI_Container))
 #define UI_CONTAINER(self)				(GBL_CAST(UI_Container, self))
 #define UI_CONTAINER_CLASS(klass)		(GBL_CLASS_CAST(UI_Container, klass))
-#define UI_CONTAINER_GET_CLASS(self)	(GBL_CLASSOF(UI_Container, self))
+#define UI_CONTAINER_CLASSOF(self)	(GBL_CLASSOF(UI_Container, self))
 
 #define GBL_SELF_TYPE UI_Container
 

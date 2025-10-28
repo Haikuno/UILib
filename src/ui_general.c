@@ -46,7 +46,7 @@ void UI_draw_enableAll_(GblObject *pSelf) {
 GBL_RESULT UI_update_(GblObject* pSelf) {
     size_t childCount = GblObject_childCount(pSelf);
 
-    GblObjectClass* pClass          = GBL_OBJECT_GET_CLASS(pSelf);
+    GblObjectClass* pClass          = GBL_OBJECT_GET_CLASS(pSelf); // UI_TODO: change this to GBL_OBJECT_CLASSOF once libGimbal is updated
     UI_WidgetClass* pWidgetClass_   = GBL_CLASS_AS(UI_Widget, pClass);
 
     if (pWidgetClass_ != nullptr) {
@@ -62,8 +62,9 @@ GBL_RESULT UI_update_(GblObject* pSelf) {
 }
 
 GBL_RESULT UI_unref_(GblObject* pSelf) {
-    size_t      childCount  = GblObject_childCount(pSelf);
+    UI_draw_disableAll_(pSelf);
 
+    size_t      childCount  = GblObject_childCount(pSelf);
     for (size_t i = childCount; i-- > 0;) {
         GblObject* childObj = GblObject_findChildByIndex(pSelf, i);
         if (childObj != nullptr) UI_unref_(childObj);

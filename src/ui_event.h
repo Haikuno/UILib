@@ -6,7 +6,7 @@
 #define UI_EVENT_TYPE				(GBL_TYPEID(UI_Event))
 #define UI_EVENT(self)				(GBL_CAST(UI_Event, self))
 #define UI_EVENT_CLASS(klass)		(GBL_CLASS_CAST(UI_Event, klass))
-#define UI_EVENT_GET_CLASS(self)	(GBL_CLASSOF(UI_Event, self))
+#define UI_EVENT_CLASSOF(self)		(GBL_CLASSOF(UI_Event, self))
 
 #define GBL_SELF_TYPE UI_Event
 

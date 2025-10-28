@@ -21,9 +21,16 @@
 // Also recursively unrefs all of its children.
 #define UI_unref(obj)					(UI_unref_		(GBL_OBJECT(obj)))
 
-// Connects a UI element's (typically a UI_Button) signal to a function.
-// See UI_button.h
-#define UI_connect(obj, signal, func) 	(GBL_CONNECT(obj, signal, func))
+/*
+	Connects a UI element's (typically a UI_Button) signal to a callback. Optionally takes in userdata (a void* of whatever you want to pass in)
+	The callback should take in a pointer to the UI element type that emitted the signal, and return void.
+	Use UI_userData() to get the userdata in your callback
+	See UI_button.h for signal names
+*/
+#define UI_connect(emitter, signal, callback, ...) 	(GBL_CONNECT(emitter, signal, emitter, callback __VA_OPT__(,) __VA_ARGS__))
+
+// Inside a callback connected to a signal, returns the userdata that was passed in
+#define UI_userData()	(GblClosure_currentUserdata())
 
 // Draws all of the UI elements in the draw queue
 // Drawable elements are added to the draw queue when they are created
@@ -33,16 +40,16 @@ GBL_RESULT	UI_draw(void);
 
 
 // Disables drawing for a given widget
-#define UI_draw_disable(obj) (UI_draw_disable_(GBL_OBJECT(obj)));
+#define UI_draw_disable(obj) (UI_draw_disable_(GBL_OBJECT(obj)))
 
 // Enables drawing for a given widget
-#define UI_draw_enable(obj) (UI_draw_enable_(GBL_OBJECT(obj)));
+#define UI_draw_enable(obj) (UI_draw_enable_(GBL_OBJECT(obj)))
 
 // Disables drawing for a given widget and all of its children
-#define UI_draw_disableAll(obj) (UI_draw_disableAll_(GBL_OBJECT(obj)));
+#define UI_draw_disableAll(obj) (UI_draw_disableAll_(GBL_OBJECT(obj)))
 
 // Enables drawing for a given widget and all of its children
-#define UI_draw_enableAll(obj) (UI_draw_enableAll_(GBL_OBJECT(obj)));
+#define UI_draw_enableAll(obj) (UI_draw_enableAll_(GBL_OBJECT(obj)))
 
 // Functions used for macros. Ignore.
 GBL_RESULT	UI_update_(GblObject *pSelf);

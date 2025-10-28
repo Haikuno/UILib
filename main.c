@@ -87,10 +87,10 @@ int main(int argc, char *argv[]) {
 										"border_radius", 0.5f, "border_color", 0x000000FF,
 										"parent", container_1);
 
-	auto button_2 = UI_Button_create(	"label", "2",
+	auto button_2 = UI_Button_create(	"label", "X",
 										"color", 0xE08616FF,
 										"border_radius", 0.5f, "border_color", 0x000000FF,
-										"parent", container_1);
+										"parent", container_1, "isSelectable", false);
 
     auto button_3 = UI_Button_create(	"label", "3",
 										"color", 0xE08616FF,
@@ -102,10 +102,10 @@ int main(int argc, char *argv[]) {
 										"border_radius", 0.5f, "border_color", 0x000000FF,
 										"parent", container_1);
 
-    auto button_5 = UI_Button_create(	"label", "5",
+    auto button_5 = UI_Button_create(	"label", "X",
 										"color", 0xE08616FF,
 										"border_radius", 0.5f, "border_color", 0x000000FF,
-										"parent", container_1);
+										"parent", container_1, "isSelectable", false);
 
 	auto fishImg		= UI_Widget_create(	"a", 0, "texture", &fishImgTexture,
 											"label", "cool fish!",

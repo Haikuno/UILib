@@ -66,7 +66,7 @@ static GBL_RESULT UI_Controller_draw_(UI_Widget *pSelf) {
 static GBL_RESULT UI_ControllerClass_init_(GblClass *pClass, const void *pData) {
 	GBL_UNUSED(pData);
 
-	if (!GblType_classRefCount(GBL_CLASS_TYPEOF(pClass))) GBL_PROPERTIES_REGISTER(UI_Controller);
+	if (!GblType_classRefCount(UI_CONTROLLER_TYPE)) GBL_PROPERTIES_REGISTER(UI_Controller);
 
 	GBL_OBJECT_CLASS(pClass)->pFnSetProperty 	= UI_Controller_GblObject_setProperty_;
 	GBL_OBJECT_CLASS(pClass)->pFnProperty    	= UI_Controller_GblObject_property_;
@@ -92,6 +92,10 @@ static GBL_RESULT UI_Controller_init_(GblInstance *pInstance) {
 void UI_Controller_notifyButton(UI_Controller *pSelf, UI_CONTROLLER_BUTTON_STATE state, UI_CONTROLLER_BUTTON button) {
 	UI_ButtonEvent *pEvent = UI_ButtonEvent_create(pSelf, state, button);
 	GblObject_sendEvent(GBL_OBJECT(pSelf), GBL_EVENT(pEvent));
+}
+
+void UI_Controller_setSelectedButton(UI_Controller *pSelf, UI_Button* pButton) {
+	UI_CONTROLLER(pSelf)->pSelectedButton = pButton;
 }
 
 GblType UI_Controller_type(void) {

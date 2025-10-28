@@ -106,7 +106,7 @@ static GBL_RESULT UI_Container_GblObject_property_(const GblObject *pObject, con
 static GBL_RESULT UI_ContainerClass_init_(GblClass *pClass, const void *pData) {
     GBL_UNUSED(pData);
 
-    if (!GblType_classRefCount(GBL_CLASS_TYPEOF(pClass))) GBL_PROPERTIES_REGISTER(UI_Container);
+    if (!GblType_classRefCount(UI_CONTAINER_TYPE)) GBL_PROPERTIES_REGISTER(UI_Container);
 
     GBL_OBJECT_CLASS(pClass)->pFnSetProperty = UI_Container_GblObject_setProperty_;
     GBL_OBJECT_CLASS(pClass)->pFnProperty    = UI_Container_GblObject_property_;
