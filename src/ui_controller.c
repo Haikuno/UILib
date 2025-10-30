@@ -105,15 +105,25 @@ static UI_Button* moveCursor_(GblObject* pSelf, UI_CONTROLLER_BUTTON buttonPress
     if (axis == parent_orientation) {
         UI_Button* sibling = findSelectableSibling_(pSelf, next);
         if (sibling) return sibling;
-
-        // If axis doesn't match grandparent, inter-container movement is not possible
-        if (axis != grand_parent_orientation) return nullptr;
     }
 
     // Inter-container movement
-    GblObject* pNewContainer = findSiblingContainerWithButton_(pParent, next);
+    GblObject* pNewContainer = nullptr;
+
+    // If axis doesn't match grandparent, inter-container movement should be attempted with grandparent's siblings
+    if (axis != grand_parent_orientation) {
+        pNewContainer = findSiblingContainerWithButton_(pGrandParent, next);
+    } else {
+        pNewContainer = findSiblingContainerWithButton_(pParent, next);
+    }
 
     if (!pNewContainer) return nullptr;
+
+    // Make sure the new container has buttons, and not just containers that contain buttons
+    auto firstChild = GblObject_childFirst(pNewContainer);
+    if (!findSelectableSibling_(firstChild, true)) {
+        pNewContainer = firstChild;
+    }
 
     char new_orientation = tolower(GBL_AS(UI_Container, pNewContainer)->orientation);
     size_t preferredIndex = (new_orientation == parent_orientation && GblObject_childCount(pNewContainer) > childIndex)
