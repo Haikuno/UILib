@@ -2,7 +2,6 @@
 #define UI_CONTROLLER_H
 
 #include "ui_button.h"
-#include "ui_buttonevent.h"
 
 #define UI_CONTROLLER_TYPE					(GBL_TYPEID(UI_Controller))
 #define UI_CONTROLLER(self)					(GBL_CAST(UI_Controller, self))
@@ -13,6 +12,21 @@
 
 GBL_FORWARD_DECLARE_STRUCT(UI_Controller);
 GBL_DECLS_BEGIN
+
+typedef enum {
+    UI_CONTROLLER_BUTTON_PRESS,
+    UI_CONTROLLER_BUTTON_RELEASE
+} UI_CONTROLLER_BUTTON_STATE;
+
+typedef enum {
+	UI_CONTROLLER_UP,
+	UI_CONTROLLER_RIGHT,
+	UI_CONTROLLER_DOWN,
+	UI_CONTROLLER_LEFT,
+	UI_CONTROLLER_PRIMARY,
+	UI_CONTROLLER_SECONDARY,
+	UI_CONTROLLER_TERTIARY
+} UI_CONTROLLER_BUTTON;
 
 GBL_CLASS_DERIVE_EMPTY(UI_Controller, UI_Widget)
 
@@ -35,11 +49,9 @@ GblType UI_Controller_type(void);
 /*
 	Takes in a UI_Controller,
 	a button state (UI_CONTROLLER_BUTTON_PRESS or UI_CONTROLLER_BUTTON_RELEASE),
-	and a button (UI_CONTROLLER_UP, UI_CONTROLLER_RIGHT, etc.)
-
-	Sends it to the parent (usually a UI_Root) for it to handle
+	and a button (UI_CONTROLLER_UP, UI_CONTROLLER_RIGHT, etc.), and handles the event
 */
-void UI_Controller_notifyButton(GBL_SELF, UI_CONTROLLER_BUTTON_STATE state, UI_CONTROLLER_BUTTON button);
+void UI_Controller_sendButton(GBL_SELF, UI_CONTROLLER_BUTTON_STATE state, UI_CONTROLLER_BUTTON button);
 
 // Takes in a UI_Controller, and sets its selected button to the passed UI_Button
 void UI_Controller_setSelectedButton(GBL_SELF, UI_Button* pButton);

@@ -1,7 +1,6 @@
 #include "ui_widget.h"
 #include "ui_button.h"
 #include "ui_general.h"
-#include "ui_internal.h"
 #include "ui_container.h"
 #include "ui_root.h"
 
@@ -11,7 +10,7 @@ static GBL_RESULT UI_Widget_init_(GblInstance *pInstance) {
 	UI_WIDGET(pInstance)->w = 320;
 	UI_WIDGET(pInstance)->h = 240;
 
-	UI_WIDGET(pInstance)->isRelative = true;
+	UI_WIDGET(pInstance)->isRelative = false;
 
 	UI_WIDGET(pInstance)->r = 0;
 	UI_WIDGET(pInstance)->g = 255;
@@ -37,17 +36,25 @@ static GBL_RESULT UI_Widget_init_(GblInstance *pInstance) {
 	UI_WIDGET(pInstance)->font_border_r = 0;
 	UI_WIDGET(pInstance)->font_border_g = 0;
 	UI_WIDGET(pInstance)->font_border_b = 0;
-	UI_WIDGET(pInstance)->font_border_a = 255;
+	UI_WIDGET(pInstance)->font_border_a = 0;
 	UI_WIDGET(pInstance)->font_border_thickness = 1;
 
 	UI_WIDGET(pInstance)->texture = nullptr;
 
 	UI_WIDGET(pInstance)->z_index = 0;
 
-	GblStringBuffer_construct(&UI_WIDGET(pInstance)->label);
+	auto root = GBL_REQUIRE(UI_Root, "UI_Root");
+	if (!root) return GBL_RESULT_ERROR;
+	GblObject_setParent(GBL_OBJECT(pInstance), GBL_OBJECT(root));
 
+
+	GblStringBuffer_construct(&UI_WIDGET(pInstance)->label);
 	UI_drawQueue_push(GBL_OBJECT(pInstance));
 
+	return GBL_RESULT_SUCCESS;
+}
+
+static GBL_RESULT UI_Widget_constructed_(GblObject *pSelf) {
 	return GBL_RESULT_SUCCESS;
 }
 
@@ -172,8 +179,13 @@ static GBL_RESULT UI_Widget_GblObject_setProperty_(GblObject *pObject, const Gbl
 			GblVariant_valueCopy(pValue, &pSelf->texture);
 			break;
 		case UI_Widget_Property_Id_parent:
-			GblObject *pParent = GblVariant_objectPeek(pValue);
-			GblObject_addChild(pParent, pObject);
+			GblObject *pOldParent = GblObject_parent(pObject);
+			if(pOldParent) {
+				GblObject_removeChild(pOldParent, pObject);
+			}
+
+			GblObject *pNewParent = GblVariant_objectPeek(pValue);
+			GblObject_addChild(pNewParent, pObject);
 			break;
 		default:
 			return GBL_RESULT_ERROR_INVALID_PROPERTY;
@@ -304,10 +316,10 @@ static GBL_RESULT UI_Widget_update_(UI_Widget *pSelf) {
 
 static GBL_RESULT UI_Widget_draw_(UI_Widget *pSelf) {
 	Rectangle  rec    = (Rectangle){ pSelf->x, pSelf->y, pSelf->w, pSelf->h };
-	GblObject *parent = GblObject_parent(GBL_OBJECT(pSelf));
+	UI_Widget *pParent = GBL_AS(UI_Widget, GblObject_parent(GBL_OBJECT(pSelf)));
 
-	if (parent && GBL_TYPEOF(parent) != UI_ROOT_TYPE && GBL_TYPEOF(parent) != UI_CONTAINER_TYPE && pSelf->isRelative) {
-		Vector2 parent_pos	= UI_get_absolute_position_(UI_WIDGET(parent));
+	if (pParent && pSelf->isRelative) {
+		Vector2 parent_pos	= UI_get_absolute_position_(UI_WIDGET(pParent));
 		rec.x				+= parent_pos.x;
 		rec.y				+= parent_pos.y;
 	}
@@ -450,7 +462,7 @@ static GBL_RESULT UI_WidgetClass_init_(GblClass *pClass, const void *pData) {
 
 	GBL_OBJECT_CLASS(pClass)->pFnSetProperty = UI_Widget_GblObject_setProperty_;
 	GBL_OBJECT_CLASS(pClass)->pFnProperty    = UI_Widget_GblObject_property_;
-
+	GBL_OBJECT_CLASS(pClass)->pFnConstructed = UI_Widget_constructed_;
 	UI_WIDGET_CLASS(pClass)->pFnActivate	= nullptr;
 	UI_WIDGET_CLASS(pClass)->pFnDeactivate	= nullptr;
 	UI_WIDGET_CLASS(pClass)->pFnUpdate		= UI_Widget_update_;
@@ -470,7 +482,7 @@ GblType UI_Widget_type(void) {
 													.classSize = sizeof(UI_WidgetClass),
 													.pFnClassInit = UI_WidgetClass_init_,
 													.instanceSize = sizeof(UI_Widget),
-													.pFnInstanceInit = UI_Widget_init_ },
+													.pFnInstanceInit = UI_Widget_init_},
 							 GBL_TYPE_FLAG_TYPEINFO_STATIC);
 	}
 

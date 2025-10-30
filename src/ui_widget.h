@@ -87,7 +87,7 @@ GblType UI_Widget_type(void);
 Vector2	UI_get_absolute_position_(GBL_SELF);
 
 // Takes a list of Name/Value pairs
-#define UI_Widget_create(/* property_name, property_value */...)			GBL_NEW(UI_Widget __VA_OPT__(,) __VA_ARGS__)
+#define UI_Widget_create(/* property_name, property_value */...) GBL_NEW(UI_Widget __VA_OPT__(,) __VA_ARGS__)
 
 GBL_DECLS_END
 #undef GBL_SELF_TYPE

@@ -10,20 +10,13 @@ static GBL_RESULT UI_Button_init_(GblInstance *pInstance) {
 	return GBL_RESULT_SUCCESS;
 }
 
-static GBL_RESULT UI_Button_draw_(UI_Widget *pSelf) {
-	GBL_CTX_BEGIN(nullptr);
-	GBL_VCALL_DEFAULT(UI_Widget, pFnDraw, pSelf);
-	GBL_CTX_END();
-}
+static void setSelectedButton(UI_Button **ppButton) {
+	auto root = GBL_REQUIRE(UI_Root, "UI_Root");
+	if (!root) return;
 
-static void setSelectedButton(UI_Button **pButton) {
-	GblObject 		*pRoot			= GblObject_findAncestorByType(GBL_OBJECT(*pButton), UI_ROOT_TYPE);
+	UI_Controller *pController = GBL_AS(UI_Controller, GblObject_findChildByType(GBL_OBJECT(root), UI_CONTROLLER_TYPE));
 
-	if (!pRoot) return;
-
-	UI_Controller 	*pController	= GBL_AS(UI_Controller, GblObject_findChildByType(pRoot, UI_CONTROLLER_TYPE));
-
-	if (!pController) pController->pSelectedButton = *pButton;
+	if (!pController) pController->pSelectedButton = *ppButton;
 }
 
 static GBL_RESULT UI_Button_GblObject_setProperty_(GblObject *pObject, const GblProperty *pProp, GblVariant *pValue) {
@@ -89,10 +82,6 @@ static GBL_RESULT UI_ButtonClass_init_(GblClass *pClass, const void *pData) {
 
 	GBL_OBJECT_CLASS(pClass)->pFnSetProperty = UI_Button_GblObject_setProperty_;
 	GBL_OBJECT_CLASS(pClass)->pFnProperty    = UI_Button_GblObject_property_;
-
-	UI_WIDGET_CLASS(pClass)->pFnActivate   = nullptr;
-	UI_WIDGET_CLASS(pClass)->pFnDeactivate = nullptr;
-	UI_WIDGET_CLASS(pClass)->pFnDraw       = UI_Button_draw_;
 
 	return GBL_RESULT_SUCCESS;
 }
