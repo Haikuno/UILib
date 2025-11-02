@@ -6,8 +6,8 @@
 #include <gimbal/gimbal_core.h>
 #include <raylib.h>
 
-#include "ui_font.h"
-#include "ui_texture.h"
+#include <ui/types/ui_font.h>
+#include <ui/types/ui_texture.h>
 
 #define UI_WIDGET_TYPE				(GBL_TYPEID(UI_Widget))
 #define UI_WIDGET(self)				(GBL_CAST(UI_Widget, self))
@@ -33,7 +33,7 @@ GBL_INSTANCE_DERIVE(UI_Widget, GblObject)
 	float 				border_radius;															// border radius for rounded corners
 	bool				border_highlight;														// if the border should be highlighted (a white, smaller line running through the border)
 	bool				isRelative;																// if the position of this widget should be relative to its parent (if it has one)
-	GblStringBuffer 	label;																	// optional text label for the widget
+	GblStringRef 		*label;																	// optional text label for the widget
 	Font				*font;																	// font for rendering text
 	UI_TextAlignment	textAlignment;															// text alignment
 	Texture2D			*texture;																// optional texture for rendering

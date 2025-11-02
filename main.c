@@ -1,4 +1,4 @@
-#include "src/ui.h"
+#include <ui/ui.h>
 #include <raylib.h>
 
 typedef struct {

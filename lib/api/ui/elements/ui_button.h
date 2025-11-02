@@ -6,7 +6,7 @@
 #define UI_BUTTON_TYPE				(GBL_TYPEID(UI_Button))
 #define UI_BUTTON(self)				(GBL_CAST(UI_Button, self))
 #define UI_BUTTON_CLASS(klass)		(GBL_CLASS_CAST(UI_Button, klass))
-#define UI_BUTTON_CLASSOF(self)	(GBL_CLASSOF(UI_Button, self))
+#define UI_BUTTON_CLASSOF(self)		(GBL_CLASSOF(UI_Button, self))
 
 #define GBL_SELF_TYPE UI_Button
 

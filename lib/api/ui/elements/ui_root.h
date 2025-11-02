@@ -30,7 +30,7 @@ UI_Root* UI_Root_create(void);
 void 			UI_drawQueue_init(void);
 void 			UI_drawQueue_push(GblObject *pObj);
 void 			UI_drawQueue_remove(GblObject *pObj);
-GblArrayList 	*UI_getDrawQueue(void);
+GblArrayList 	*UI_drawQueue_get(void);
 
 GBL_DECLS_END
 #undef GBL_SELF_TYPE

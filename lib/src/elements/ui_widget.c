@@ -1,60 +1,59 @@
-#include "ui_widget.h"
-#include "ui_button.h"
-#include "ui_general.h"
-#include "ui_container.h"
-#include "ui_root.h"
+#include <ui/elements/ui_widget.h>
+#include <ui/elements/ui_button.h>
+#include <ui/elements/ui_container.h>
+#include <ui/elements/ui_root.h>
+#include <ui/ui_general.h>
 
 static GBL_RESULT UI_Widget_init_(GblInstance *pInstance) {
-	UI_WIDGET(pInstance)->x = 160;
-	UI_WIDGET(pInstance)->y = 120;
-	UI_WIDGET(pInstance)->w = 320;
-	UI_WIDGET(pInstance)->h = 240;
+	UI_Widget *pSelf = UI_WIDGET(pInstance);
 
-	UI_WIDGET(pInstance)->isRelative = false;
+	pSelf->z_index = 0;
 
-	UI_WIDGET(pInstance)->r = 0;
-	UI_WIDGET(pInstance)->g = 255;
-	UI_WIDGET(pInstance)->b = 0;
-	UI_WIDGET(pInstance)->a = 255;
+	pSelf->x 		  = 160;
+	pSelf->y 		  = 120;
+	pSelf->w 		  = 320;
+	pSelf->h 		  = 240;
+	pSelf->isRelative = false;
 
-	UI_WIDGET(pInstance)->border_r		= 0;
-	UI_WIDGET(pInstance)->border_g		= 0;
-	UI_WIDGET(pInstance)->border_b		= 0;
-	UI_WIDGET(pInstance)->border_a		= 0;
-	UI_WIDGET(pInstance)->border_width	= 4;
-	UI_WIDGET(pInstance)->border_radius	= 0.15f;
+	pSelf->r = 0;
+	pSelf->g = 255;
+	pSelf->b = 0;
+	pSelf->a = 255;
 
-	UI_WIDGET(pInstance)->border_highlight = true;
+	pSelf->border_r			= 0;
+	pSelf->border_g			= 0;
+	pSelf->border_b			= 0;
+	pSelf->border_a			= 0;
+	pSelf->border_width		= 4;
+	pSelf->border_radius	= 0.0f;
+	pSelf->border_highlight = false;
 
-	UI_WIDGET(pInstance)->textAlignment = UI_TEXT_ALIGN_CENTER;
-	UI_WIDGET(pInstance)->font = nullptr;
-	UI_WIDGET(pInstance)->font_size = 22;
-	UI_WIDGET(pInstance)->font_r = 255;
-	UI_WIDGET(pInstance)->font_g = 255;
-	UI_WIDGET(pInstance)->font_b = 255;
-	UI_WIDGET(pInstance)->font_a = 255;
-	UI_WIDGET(pInstance)->font_border_r = 0;
-	UI_WIDGET(pInstance)->font_border_g = 0;
-	UI_WIDGET(pInstance)->font_border_b = 0;
-	UI_WIDGET(pInstance)->font_border_a = 0;
-	UI_WIDGET(pInstance)->font_border_thickness = 1;
+	pSelf->font 				 = nullptr;
+	pSelf->font_size 			 = 22;
+	pSelf->font_r 				 = 255;
+	pSelf->font_g 				 = 255;
+	pSelf->font_b 				 = 255;
+	pSelf->font_a 		 		 = 255;
+	pSelf->font_border_r 		 = 0;
+	pSelf->font_border_g 		 = 0;
+	pSelf->font_border_b 		 = 0;
+	pSelf->font_border_a 		 = 0;
+	pSelf->font_border_thickness = 1;
+	pSelf->textAlignment 	  	 = UI_TEXT_ALIGN_CENTER;
 
-	UI_WIDGET(pInstance)->texture = nullptr;
-
-	UI_WIDGET(pInstance)->z_index = 0;
+	pSelf->texture = nullptr;
 
 	auto root = GBL_REQUIRE(UI_Root, "UI_Root");
-	if (!root) return GBL_RESULT_ERROR;
+	if GBL_UNLIKELY(!root) return GBL_RESULT_ERROR;
 	GblObject_setParent(GBL_OBJECT(pInstance), GBL_OBJECT(root));
 
-
-	GblStringBuffer_construct(&UI_WIDGET(pInstance)->label);
 	UI_drawQueue_push(GBL_OBJECT(pInstance));
 
 	return GBL_RESULT_SUCCESS;
 }
 
-static GBL_RESULT UI_Widget_constructed_(GblObject *pSelf) {
+static GBL_RESULT UI_Widget_deactivate_(UI_Widget *pSelf) {
+	GblStringRef_unref(pSelf->label);
 	return GBL_RESULT_SUCCESS;
 }
 
@@ -137,7 +136,8 @@ static GBL_RESULT UI_Widget_GblObject_setProperty_(GblObject *pObject, const Gbl
 			GblVariant_valueCopy(pValue, &pSelf->border_highlight);
 			break;
 		case UI_Widget_Property_Id_label:
-			GblStringBuffer_set(&pSelf->label, GblVariant_toString(pValue));
+			GblStringRef_unref(pSelf->label);
+			pSelf->label = GblStringRef_create(GblVariant_string(pValue));
 			break;
 		case UI_Widget_Property_Id_textAlignment:
 			GblVariant_valueCopy(pValue, &pSelf->textAlignment);
@@ -259,7 +259,7 @@ static GBL_RESULT UI_Widget_GblObject_property_(const GblObject *pObject, const 
 			GblVariant_setUint8(pValue, pSelf->border_highlight);
 			break;
 		case UI_Widget_Property_Id_label:
-			GblVariant_setString(pValue, GblStringBuffer_cString(&pSelf->label));
+			GblVariant_setString(pValue, pSelf->label);
 			break;
 		case UI_Widget_Property_Id_textAlignment:
 			GblVariant_setEnum(pValue, UI_TEXT_ALIGNMENT_TYPE, pSelf->textAlignment);
@@ -353,15 +353,15 @@ static GBL_RESULT UI_Widget_draw_(UI_Widget *pSelf) {
 	Vector2 textPos		= { 0, 0 };
 	const float margin	= 3.0f;
 
-	if (GblStringBuffer_length(&pSelf->label)) {
+	if (GblStringRef_length(pSelf->label)) {
 		Font font;
-		if (pSelf->font == nullptr) {
+		if (!pSelf->font) {
 			font = GetFontDefault();
 		} else {
 			font = *(pSelf->font);
 		}
 
-		textSize = MeasureTextEx(font, GblStringBuffer_cString(&pSelf->label), pSelf->font_size, 1);
+		textSize = MeasureTextEx(font, pSelf->label, pSelf->font_size, 1);
 
 		switch (pSelf->textAlignment) {
 			case UI_TEXT_ALIGN_CENTER:
@@ -395,25 +395,25 @@ static GBL_RESULT UI_Widget_draw_(UI_Widget *pSelf) {
 					if (dx == 0 && dy == 0) continue;
 
 					DrawTextEx(font,
-						GblStringBuffer_cString(&pSelf->label),
-						(Vector2){ textPos.x + dx, textPos.y + dy },
-						pSelf->font_size,
-						1.2,
-						(Color){ pSelf->font_border_r, pSelf->font_border_g, pSelf->font_border_b, pSelf->font_border_a });
+							   pSelf->label,
+							   (Vector2){ textPos.x + dx, textPos.y + dy },
+							   pSelf->font_size,
+							   1.2,
+							   (Color){ pSelf->font_border_r, pSelf->font_border_g, pSelf->font_border_b, pSelf->font_border_a });
 				}
 			}
 		}
 
 		DrawTextEx(font,
-			GblStringBuffer_cString(&pSelf->label),
-			textPos,
-			(float)pSelf->font_size,
-			1.2,
-			(Color){ pSelf->font_r, pSelf->font_g, pSelf->font_b, pSelf->font_a });
+				   pSelf->label,
+				   textPos,
+				   (float)pSelf->font_size,
+				   1.2,
+				   (Color){ pSelf->font_r, pSelf->font_g, pSelf->font_b, pSelf->font_a });
 	}
 
 
-	if (pSelf->texture != nullptr) {
+	if (pSelf->texture) {
 		Vector2 textureSize		= { (float)pSelf->texture->width, (float)pSelf->texture->height };
 		Vector2 texturePos		= { rec.x, rec.y };
 
@@ -422,7 +422,7 @@ static GBL_RESULT UI_Widget_draw_(UI_Widget *pSelf) {
 		textureSize.y = rec.height;
 
 		// if there is text, shrink it
-		if (GblStringBuffer_length(&pSelf->label)) {
+		if (GblStringRef_length(pSelf->label)) {
 			textureSize.y *= 0.6f;
 			textureSize.x *= 0.6f;
 		}
@@ -457,16 +457,14 @@ static GBL_RESULT UI_Widget_draw_(UI_Widget *pSelf) {
 static GBL_RESULT UI_WidgetClass_init_(GblClass *pClass, const void *pData) {
 	GBL_UNUSED(pData);
 
-	// Check if this is the first instance of the class
 	if (!GblType_classRefCount(UI_WIDGET_TYPE)) GBL_PROPERTIES_REGISTER(UI_Widget);
 
 	GBL_OBJECT_CLASS(pClass)->pFnSetProperty = UI_Widget_GblObject_setProperty_;
 	GBL_OBJECT_CLASS(pClass)->pFnProperty    = UI_Widget_GblObject_property_;
-	GBL_OBJECT_CLASS(pClass)->pFnConstructed = UI_Widget_constructed_;
-	UI_WIDGET_CLASS(pClass)->pFnActivate	= nullptr;
-	UI_WIDGET_CLASS(pClass)->pFnDeactivate	= nullptr;
-	UI_WIDGET_CLASS(pClass)->pFnUpdate		= UI_Widget_update_;
-	UI_WIDGET_CLASS(pClass)->pFnDraw		= UI_Widget_draw_;
+	UI_WIDGET_CLASS(pClass)->pFnActivate	 = nullptr;
+	UI_WIDGET_CLASS(pClass)->pFnDeactivate	 = UI_Widget_deactivate_;
+	UI_WIDGET_CLASS(pClass)->pFnUpdate		 = UI_Widget_update_;
+	UI_WIDGET_CLASS(pClass)->pFnDraw		 = UI_Widget_draw_;
 
 	return GBL_RESULT_SUCCESS;
 }
@@ -478,25 +476,26 @@ GblType UI_Widget_type(void) {
 		type =
 			GblType_register(GblQuark_internStatic("UI_Widget"),
 							 GBL_OBJECT_TYPE,
-							 &(static GblTypeInfo){
-													.classSize = sizeof(UI_WidgetClass),
-													.pFnClassInit = UI_WidgetClass_init_,
-													.instanceSize = sizeof(UI_Widget),
-													.pFnInstanceInit = UI_Widget_init_},
+							 &(static GblTypeInfo){.classSize = sizeof(UI_WidgetClass),
+												   .pFnClassInit = UI_WidgetClass_init_,
+												   .instanceSize = sizeof(UI_Widget),
+												   .pFnInstanceInit = UI_Widget_init_},
 							 GBL_TYPE_FLAG_TYPEINFO_STATIC);
 	}
 
 	return type;
 }
 
-/// General UI widget functions ///
-
 Vector2 UI_get_absolute_position_(UI_Widget *pWidget) {
-	GblObject	*parent	= GblObject_parent(GBL_OBJECT(pWidget));
+	UI_Widget	*parent	= GBL_AS(UI_Widget, GblObject_parent(GBL_OBJECT(pWidget)));
 	Vector2		pos		= { pWidget->x, pWidget->y };
 
 	if (!parent || !pWidget->isRelative) {
 		return pos;
+	}
+
+	if (GBL_AS(UI_Container, parent)) {
+		if (!GBL_AS(UI_Container, parent)->alignWidgets) return pos;
 	}
 
 	Vector2 parent_pos = UI_get_absolute_position_(UI_WIDGET(parent));

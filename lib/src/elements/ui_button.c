@@ -1,22 +1,16 @@
-#include "ui_button.h"
-#include "ui_controller.h"
-#include "ui_root.h"
+#include <ui/elements/ui_button.h>
+#include <ui/elements/ui_controller.h>
+#include <ui/elements/ui_root.h>
 
 static GBL_RESULT UI_Button_init_(GblInstance *pInstance) {
-	UI_BUTTON(pInstance)->isActive				= true;
-	UI_BUTTON(pInstance)->isSelectable			= true;
-	UI_BUTTON(pInstance)->isSelected			= false;
-	UI_BUTTON(pInstance)->isSelectedByDefault	= false;
+	UI_Button *pButton = UI_BUTTON(pInstance);
+
+	pButton->isActive				= true;
+	pButton->isSelectable			= true;
+	pButton->isSelected				= false;
+	pButton->isSelectedByDefault	= false;
+
 	return GBL_RESULT_SUCCESS;
-}
-
-static void setSelectedButton(UI_Button **ppButton) {
-	auto root = GBL_REQUIRE(UI_Root, "UI_Root");
-	if (!root) return;
-
-	UI_Controller *pController = GBL_AS(UI_Controller, GblObject_findChildByType(GBL_OBJECT(root), UI_CONTROLLER_TYPE));
-
-	if (!pController) pController->pSelectedButton = *ppButton;
 }
 
 static GBL_RESULT UI_Button_GblObject_setProperty_(GblObject *pObject, const GblProperty *pProp, GblVariant *pValue) {
@@ -102,16 +96,14 @@ GblType UI_Button_type(void) {
 	static GblType type = GBL_INVALID_TYPE;
 
 	if (type == GBL_INVALID_TYPE) {
-		type =
-			GblType_register(GblQuark_internStatic("UI_Button"),
-							 UI_WIDGET_TYPE,
-							 &(static GblTypeInfo){
-													.classSize = sizeof(UI_ButtonClass),
-													.pFnClassInit = UI_ButtonClass_init_,
-													.instanceSize = sizeof(UI_Button),
-													.pFnInstanceInit = UI_Button_init_,
-													.pFnClassFinal = UI_ButtonClass_final_ },
-							 GBL_TYPE_FLAG_TYPEINFO_STATIC);
+		type = GblType_register(GblQuark_internStatic("UI_Button"),
+								UI_WIDGET_TYPE,
+								&(static GblTypeInfo){.classSize = sizeof(UI_ButtonClass),
+													  .pFnClassInit = UI_ButtonClass_init_,
+													  .instanceSize = sizeof(UI_Button),
+													  .pFnInstanceInit = UI_Button_init_,
+													  .pFnClassFinal = UI_ButtonClass_final_},
+								GBL_TYPE_FLAG_TYPEINFO_STATIC);
 
 	}
 

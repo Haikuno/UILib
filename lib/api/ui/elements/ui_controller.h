@@ -31,9 +31,9 @@ typedef enum {
 GBL_CLASS_DERIVE_EMPTY(UI_Controller, UI_Widget)
 
 GBL_INSTANCE_DERIVE(UI_Controller, UI_Widget)
-	UI_Button* 	pSelectedButton;
+	UI_Button* 	pSelectedButton; // The currently selected button
 	uint8_t		controllerId;	 // To know which controller is currently selected
-	bool		isKeyboard;
+	bool		isKeyboard; 	 // If the controller is a keyboard
 GBL_INSTANCE_END
 
 GBL_PROPERTIES(UI_Controller,
@@ -44,17 +44,18 @@ GBL_PROPERTIES(UI_Controller,
 
 GblType UI_Controller_type(void);
 
-#define UI_Controller_create(...) GBL_NEW(UI_Controller __VA_OPT__(,) __VA_ARGS__)
+// Takes a list of Name/Value pairs
+#define UI_Controller_create(...) 		GBL_NEW(UI_Controller __VA_OPT__(,) __VA_ARGS__)
 
 /*
 	Takes in a UI_Controller,
 	a button state (UI_CONTROLLER_BUTTON_PRESS or UI_CONTROLLER_BUTTON_RELEASE),
 	and a button (UI_CONTROLLER_UP, UI_CONTROLLER_RIGHT, etc.), and handles the event
 */
-void UI_Controller_sendButton(GBL_SELF, UI_CONTROLLER_BUTTON_STATE state, UI_CONTROLLER_BUTTON button);
+void UI_Controller_sendButton			(GBL_SELF, UI_CONTROLLER_BUTTON_STATE state, UI_CONTROLLER_BUTTON button);
 
 // Takes in a UI_Controller, and sets its selected button to the passed UI_Button
-void UI_Controller_setSelectedButton(GBL_SELF, UI_Button* pButton);
+void UI_Controller_setSelectedButton	(GBL_SELF, UI_Button* pButton);
 
 GBL_DECLS_END
 #undef GBL_SELF_TYPE

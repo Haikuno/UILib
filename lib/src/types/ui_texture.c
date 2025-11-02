@@ -1,4 +1,4 @@
-#include "ui_texture.h"
+#include <ui/types/ui_texture.h>
 
 GblType UI_Texture_type(void) {
     static GblType type = GBL_INVALID_TYPE;

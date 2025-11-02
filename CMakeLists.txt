@@ -4,9 +4,7 @@ project(UILib)
 set(CMAKE_C_STANDARD 23)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
-add_subdirectory(libgimbal)
+add_subdirectory(lib)
 
-file(GLOB SRCS src/*.c src/*.h)
-
-add_executable(uilib main.c ${SRCS})
-target_link_libraries(uilib raylib libGimbal)
+add_executable(testuilib main.c)
+target_link_libraries(testuilib uilib raylib libGimbal)

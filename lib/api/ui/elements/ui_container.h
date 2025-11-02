@@ -16,7 +16,7 @@ GBL_DECLS_BEGIN
 GBL_CLASS_DERIVE_EMPTY(UI_Container, UI_Widget)
 
 GBL_INSTANCE_DERIVE(UI_Container, UI_Widget)
-    char orientation;       // 'h' for horizontal, 'v' for vertical layout of child widgets
+    char orientation;       // 'h' for horizontal, 'v' for vertical layout of child widgets UI_TODO: make this an enum
     bool resizeWidgets;     // if true, child widgets will be resized to fit the container's width/height
     bool alignWidgets;      // if true, child widgets will be aligned automatically
     float padding;          // the space between the container's border and its child widgets
