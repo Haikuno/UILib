@@ -1,139 +1,84 @@
-#include <ui/ui.h>
+#include <gumball/gumball.h>
 #include <raylib.h>
-
-typedef struct {
-	KeyboardKey key;
-	UI_CONTROLLER_BUTTON button_ui;
-} KeyBinding;
-
-typedef struct {
-	GamepadButton button_gamepad;
-	UI_CONTROLLER_BUTTON button_ui;
-} ButtonBinding;
-
-void checkInput(UI_Controller *controller) {
-	static KeyBinding constexpr key_bindings[] = {
-		{ KEY_UP,		UI_CONTROLLER_UP		},
-		{ KEY_RIGHT,	UI_CONTROLLER_RIGHT		},
-		{ KEY_DOWN,		UI_CONTROLLER_DOWN		},
-		{ KEY_LEFT,		UI_CONTROLLER_LEFT		},
-        { KEY_A,		UI_CONTROLLER_PRIMARY	},
-		{ KEY_S,		UI_CONTROLLER_SECONDARY	},
-		{ KEY_D,		UI_CONTROLLER_TERTIARY	},
-    };
-	static size_t constexpr n_key_bindings = sizeof(key_bindings) / sizeof(key_bindings[0]);
-
-	static ButtonBinding constexpr button_bindings[] = {
-		{ 	GAMEPAD_BUTTON_LEFT_FACE_UP, 		UI_CONTROLLER_UP 		},
-		{	GAMEPAD_BUTTON_LEFT_FACE_RIGHT, 	UI_CONTROLLER_RIGHT 	},
-		{	GAMEPAD_BUTTON_LEFT_FACE_DOWN, 		UI_CONTROLLER_DOWN 		},
-		{	GAMEPAD_BUTTON_LEFT_FACE_LEFT, 		UI_CONTROLLER_LEFT		},
-		{	GAMEPAD_BUTTON_RIGHT_FACE_DOWN, 	UI_CONTROLLER_PRIMARY	},
-		{	GAMEPAD_BUTTON_RIGHT_FACE_RIGHT,	UI_CONTROLLER_SECONDARY	},
-		{	GAMEPAD_BUTTON_RIGHT_FACE_UP, 		UI_CONTROLLER_TERTIARY	},
-	};
-	static size_t constexpr n_button_bindings = sizeof(button_bindings) / sizeof(button_bindings[0]);
-
-	if (controller->isKeyboard) {
-		for (size_t i = 0; i < n_key_bindings; ++i) {
-			if (IsKeyPressed(key_bindings[i].key))
-				UI_Controller_sendButton(controller, UI_CONTROLLER_BUTTON_PRESS, key_bindings[i].button_ui);
-			if (IsKeyReleased(key_bindings[i].key))
-				UI_Controller_sendButton(controller, UI_CONTROLLER_BUTTON_RELEASE, key_bindings[i].button_ui);
-		}
-
-		return;
-	}
-
-	for (size_t i = 0; i < n_button_bindings; ++i) {
-		if (IsGamepadButtonPressed(controller->controllerId, button_bindings[i].button_gamepad))
-			UI_Controller_sendButton(controller, UI_CONTROLLER_BUTTON_PRESS, button_bindings[i].button_ui);
-		if (IsGamepadButtonReleased(controller->controllerId, button_bindings[i].button_gamepad))
-			UI_Controller_sendButton(controller, UI_CONTROLLER_BUTTON_RELEASE, button_bindings[i].button_ui);
-	}
-}
 
 int main(int argc, char *argv[]) {
 	InitWindow(320, 240, "UILib Example");
 	SetTargetFPS(60);
 
-	auto fishImgTexture = LoadTexture("babyfish_test.png");
+	auto root 		= GUM_Root_create();
 
-	auto root 		= UI_Root_create();
-    auto controller = UI_Controller_create("controllerId", 1, "color", 0x0000FFFF, "isKeyboard", true);
+    auto controller = GUM_Controller_create("controllerId", 1, "color", 0xFF0000FF, "isKeyboard", true, "name", "main controller");
 
-	auto container_parent = UI_Container_create("a", 0, "alignWidgets", false, "resizeWidgets", false, "isRelative", false);
+	auto container_parent = GUM_Container_create("a", 0, "alignWidgets", false, "resizeWidgets", false, "isRelative", false, "name", "parent container");
 
-    auto container_1 = UI_Container_create("x", 10.0f, "y", 10.0f, "w", 120.0f, "h", 150.0f,
+    auto container_1 = GUM_Container_create("x", 10.0f, "y", 10.0f, "w", 120.0f, "h", 150.0f,
 										   "color", 0x000000FF,
 										   "orientation", 'v',
 										   "border_color", 0x000000FF,
-										   "parent", container_parent);
+										   "parent", container_parent,
+											"name", "container 1");
 
-    auto container_2 = UI_Container_create("x", 140.0f, "y", 10.0f, "w", 170.0f, "h", 150.0f,
+    auto container_2 = GUM_Container_create("x", 140.0f, "y", 10.0f, "w", 170.0f, "h", 150.0f,
 										   "color", 0xE08616FF, "border_color", 0x000000FF,
 										   "orientation", 'v',
-										   "parent", container_parent);
+										   "parent", container_parent, "name", "container 2");
 
-	auto container_3 = UI_Container_create("x", 10.0f, "y", 170.0f, "w", 300.0f, "h", 60.0f,
+	auto container_3 = GUM_Container_create("x", 10.0f, "y", 170.0f, "w", 300.0f, "h", 60.0f,
 										   "color", 0x000000FF, "border_color", 0x000000FF,
 										   "orientation", 'h', "margin", 8.0f,
-										   "parent", container_parent);
+										   "parent", container_parent, "name", "container 3");
 
-	auto button_1 = UI_Button_create("label", "1",
+	auto button_1 = GUM_Button_create("label", "1",
 									 "color", 0xE08616FF,
 									 "border_radius", 0.5f, "border_color", 0x000000FF,
-									 "parent", container_1);
+									 "parent", container_1, "name", "button 1");
 
-	auto button_2 = UI_Button_create("label", "X",
+	auto button_2 = GUM_Button_create("label", "X",
 									 "color", 0xE08616FF,
 									 "border_radius", 0.5f, "border_color", 0x000000FF,
-									 "parent", container_1, "isSelectable", false);
+									 "parent", container_1, "isSelectable", false, "name", "button 2");
 
-    auto button_3 = UI_Button_create("label", "3",
+    auto button_3 = GUM_Button_create("label", "3",
 									 "color", 0xE08616FF,
 									 "border_radius", 0.5f, "border_color", 0x000000FF,
-									 "parent", container_1);
+									 "parent", container_1, "name", "button 3");
 
-	auto button_4 = UI_Button_create("label", "4",
+	auto button_4 = GUM_Button_create("label", "4",
 									 "color", 0xE08616FF,
 									 "border_radius", 0.5f, "border_color", 0x000000FF,
-									 "parent", container_1);
+									 "parent", container_1, "name", "button 4");
 
-    auto button_5 = UI_Button_create("label", "X",
+    auto button_5 = GUM_Button_create("label", "X",
 									 "color", 0xE08616FF,
 									 "border_radius", 0.5f, "border_color", 0x000000FF,
-									 "parent", container_1, "isSelectable", false);
+									 "parent", container_1, "isSelectable", false, "name", "button 5");
 
-	auto fishImg		= UI_Widget_create("a", 0, "texture", &fishImgTexture,
-										   "label", "cool fish!",
-										   "parent", container_2);
+	GUM_IResource *pRes = GUM_Manager_load("../babyfish_test.png");
 
-	auto button_select	= UI_Button_create("label", "Select",
+	auto fishImg  = GUM_Widget_create("a", 0, "label", "cool fish!",
+									  "parent", container_2, "name", "fishimg",
+									  "texture", pRes);
+
+	auto button_select	= GUM_Button_create("label", "Select",
 										   "color", 0xE08616FF, "border_color", 0x000000FF,
 										   "isSelectedByDefault", true,
-										   "parent", container_3);
+										   "parent", container_3, "name", "select");
 
-    auto button_back 	= UI_Button_create("label", "Go Back",
-										   "color", 0xE08616FF, "border_color", 0x000000FF,
-										   "parent", container_3);
+    auto button_back 	= GUM_Button_create("label", "Go Back",
+										    "color", 0xE08616FF, "border_color", 0x000000FF,
+										    "parent", container_3, "name", "back");
 
 	// main loop
 	while (!WindowShouldClose()) {
+		GUM_update(root);
+
 		BeginDrawing();
 		ClearBackground(RAYWHITE);
-
-		checkInput(controller);
-
-		// only need to call update on the top-most parent (usually root)
-		UI_update(root);
-		UI_draw();
-
+		GUM_draw(nullptr);
 		EndDrawing();
 	}
 
-	UnloadTexture(fishImgTexture);
-	UI_unref(root); // only need to call unref on the top-most parent (usually root)
+	GUM_unref(root);
 	CloseWindow();
 	return 0;
 }
